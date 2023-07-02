@@ -2,9 +2,17 @@
 # define SCOP_H
 
 # include <iostream>
+# include <string>
 # include <thread>
 # include <fstream>
+# include <vector>
 # include <math.h>
+
+typedef struct {
+	float x;
+	float y;
+	float z;
+}			t_vertex;
 
 # define GLEW_STATIC
 # include <GL/glew.h> // must be before glfw
@@ -13,5 +21,11 @@
 # include <glm/glm.hpp>
 # include <glm/gtc/matrix_transform.hpp>
 # include <glm/gtc/type_ptr.hpp>
+
+# include "Exception.hpp"
+# include "utils.h"
+# include "Face.hpp"
+# include "Parser.hpp"
+# include "OpenGl_Manager.hpp"
 
 #endif

@@ -1,49 +1,56 @@
 #include "scop.h"
 
-int main( void )
+static std::string get_file( int ac, char **av )
 {
-	std::cout << " ---- Hello World ----" << std::endl;
+	if (ac == 1) {
+		return ("Resources/planet.obj");
+	} else if (ac == 2) {
+		std::string res(av[1]);
 
-	glfwInit();
-    // std::this_thread::sleep_for(std::chrono::seconds(1));
+		if (res.size() >= 4 && (!res.compare(res.size() - 4, 4, ".obj") || !res.compare(res.size() - 4, 4, ".OBJ"))) {
+			return (res);
+		}
+	}
+	std::cerr << "Usage: ./scop <path-to-file>.obj" << std::endl;
+	return ("");
+}
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+static std::string get_root( std::string file )
+{
+	size_t index = file.rfind('/');
+	if (index == std::string::npos)
+		return ("");
+	return (file.substr(0, index + 1));
+}
 
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
-	GLFWwindow* window = glfwCreateWindow(1200, 900, "OpenGL", nullptr, nullptr);
-
-	// activate opengl context
-	glfwMakeContextCurrent(window);
-
-	// glew is there to use the correct version for all functions
-	glewExperimental = GL_TRUE;
-	glewInit();
-
-	GLenum error_check = glGetError();	
-	if (error_check) {
-		std::cerr << "glGetError set to " << error_check << ", quitting now" << std::endl;
+int main( int ac, char **av )
+{
+	std::string file = get_file(ac, av);
+	if (file.empty())
 		return (1);
-	} else {
-		std::cout << "setup done, entering main loop" << std::endl;
+
+	std::cout << " ---- Hello ----" << std::endl << std::endl;
+	Parser *parser = new Parser(get_root(file));
+
+	try {
+		parser->parse(file);
+		// parser->center_object();
+		parser->display_content();
+	} catch (std::exception & e) {
+		std::cerr << e.what() << std::endl;
+		delete parser;
+		std::cout << std::endl << " ---- Goodbye ----" << std::endl;
+		return (1);
 	}
 
-	// main loop cheking for inputs and rendering everything
-	while(!glfwWindowShouldClose(window))
-	{
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			glfwSetWindowShouldClose(window, GL_TRUE);
+	OpenGL_Manager *render = new OpenGL_Manager();
 
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-	}
+	render->setup_window();
+	delete parser;
+	render->main_loop();
 
-	glfwMakeContextCurrent(NULL);
-    glfwTerminate();
+	delete render;
 
-	std::cout << " ---- Goodbye World ----" << std::endl;
+	std::cout << std::endl << " ---- Goodbye ----" << std::endl;
 	return (0);
 }
