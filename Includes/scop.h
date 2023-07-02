@@ -24,8 +24,8 @@ typedef struct {
 
 # include "Exception.hpp"
 # include "utils.h"
-# include "Face.hpp"
 # include "Parser.hpp"
+# include "Face.hpp"
 # include "OpenGl_Manager.hpp"
 
 #endif

@@ -1,6 +1,6 @@
 #include "scop.h"
 
-std::string	trim_spaces(std::string str)
+std::string	trim_spaces( std::string str )
 {
 	int index = 0;
 	std::string new_string;
@@ -29,7 +29,26 @@ std::string	trim_spaces(std::string str)
 	return (new_string);
 }
 
-void display_special_characters(std::string str)
+std::string get_file_content( std::string file_name )
+{
+	std::ifstream indata (file_name.c_str());
+	if (!indata.is_open()) {
+		std::cerr << "Error\nCould not open " << file_name << std::endl;
+		exit(1);
+	}
+	std::string data;
+	std::string line;
+	while (!indata.eof()) {
+		std::getline( indata, line );
+		data += line;
+		if (!indata.eof())
+			data += '\n';
+	}
+	indata.close();
+	return (data);
+}
+
+void display_special_characters( std::string str )
 {
 	for (size_t index = 0; str[index]; ++index)
 	{

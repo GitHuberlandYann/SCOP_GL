@@ -34,7 +34,7 @@ int main( int ac, char **av )
 
 	try {
 		parser->parse(file);
-		// parser->center_object();
+		parser->center_object();
 		parser->display_content();
 	} catch (std::exception & e) {
 		std::cerr << e.what() << std::endl;
@@ -46,7 +46,12 @@ int main( int ac, char **av )
 	OpenGL_Manager *render = new OpenGL_Manager();
 
 	render->setup_window();
+	render->setup_array_buffer(parser);
 	delete parser;
+	std::cout << std::endl;
+	render->create_shaders();
+	render->setup_shaders();
+	std::cout << std::endl;
 	render->main_loop();
 
 	delete render;

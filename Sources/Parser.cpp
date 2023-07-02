@@ -1,6 +1,6 @@
 #include "scop.h"
 
-Parser::Parser( std::string root ) : _root(root), _face_mode(UNSET)
+Parser::Parser( std::string root ) : _root(root), _face_mode(UNSET), _number_vertices(0)
 {
 	std::cout << "Constructor of Parser called" << std::endl;
 	set_vertex(_max_box, -10000, -10000, -10000);
@@ -188,6 +188,29 @@ void Parser::push_face( std::string line )
 	if (face_size < 3) {
 		throw InvalidFaceException();
 	}
+
+	_number_vertices += (face_size - 2) * 3; // like this for now, but later on we will reuse some vertices to gain memory space
+}
+
+float Parser::get_extremum( void )
+{
+	float res = _max_box.x;
+	if (_max_box.y > res) {
+		res = _max_box.y;
+	}
+	if (_max_box.z > res) {
+		res = _max_box.z;
+	}
+	if (-_min_box.x > res) {
+		res = -_min_box.x;
+	}
+	if (-_min_box.y > res) {
+		res = -_min_box.y;
+	}
+	if (-_min_box.z > res) {
+		res = -_min_box.z;
+	}
+	return (res);
 }
 
 // ************************************************************************** //
@@ -233,6 +256,37 @@ void Parser::parse( std::string file )
 	}
 }
 
+/* use minmax_box to center object on {0, 0, 0}
+/  also normalize it to fit in [-0.5;0.5]        */
+void Parser::center_object( void )
+{
+	t_vertex central_axis = {(_max_box.x + _min_box.x) / 2,
+								(_max_box.y + _min_box.y) / 2,
+								(_max_box.z + _min_box.z) / 2};
+
+	// std::cout << "max: {" << _max_box.x << ", " << _max_box.y << ", " << _max_box.z << "}" << std::endl;
+	// std::cout << "min: {" << _min_box.x << ", " << _min_box.y << ", " << _min_box.z << "}" << std::endl;
+	// std::cout << "axis: {" << central_axis.x << ", " << central_axis.y << ", " << central_axis.z << "}" << std::endl;
+	
+	_max_box.x -= central_axis.x;
+	_max_box.y -= central_axis.y;
+	_max_box.z -= central_axis.z;
+	_min_box.x -= central_axis.x;
+	_min_box.y -= central_axis.y;
+	_min_box.z -= central_axis.z;
+
+	float normalizer = 0.5f / get_extremum();
+
+	std::vector<t_vertex>::iterator it = _vertices.begin();
+	std::vector<t_vertex>::iterator ite = _vertices.end();
+
+	for (; it != ite; it++) {
+		set_vertex(*it, (it->x - central_axis.x) * normalizer,
+						(it->y - central_axis.y) * normalizer,
+						(it->z - central_axis.z) * normalizer);
+	}
+}
+
 void Parser::display_content( void )
 {
 	const std::string modes[] = {"UNSET", "ONLY_V", "ONLY_VT", "ONLY_VN", "VTN"};
@@ -243,9 +297,29 @@ void Parser::display_content( void )
 	std::cout << "\t-Number of vertices_textures: " << _vertices_textures.size() << std::endl;
 	std::cout << "\t-Number of vertices_normals: " << _vertices_normals.size() << std::endl;
 	std::cout << "\t-Number of faces: " << _faces.size() << std::endl;
+	std::cout << "\t-Number of vertices passed to shader: " << _number_vertices << std::endl;
 	// std::cout << "\t-Number of materials: " << _materials.size() << std::endl;
 	std::cout << "\t-box x[" << _min_box.x << ':' << _max_box.x << ']' << std::endl;
 	std::cout << "\t     y[" << _min_box.y << ':' << _max_box.y << ']' << std::endl;
 	std::cout << "\t     z[" << _min_box.z << ':' << _max_box.z << ']' << std::endl;
 	std::cout << std::endl << " ----------------------" << std::endl << std::endl;
+}
+
+unsigned int Parser::get_number_vertices( void )
+{
+	return (_number_vertices);
+}
+
+void Parser::fill_vertex_array(GLfloat *vertices)
+{
+	size_t index = 0;
+
+	std::vector<Face *>::iterator it = _faces.begin();
+	std::vector<Face *>::iterator ite = _faces.end();
+
+	for (; it != ite; it++) {
+		(*it)->fill_vertex_array(vertices, index, _face_mode, _vertices, _vertices_textures, _vertices_normals);
+	}
+
+	std::cout << "vertices filled up to index " << index << std::endl;
 }
