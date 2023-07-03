@@ -1,8 +1,13 @@
 #ifndef OPENGL_MANAGER_HPP
 # define OPENGL_MANAGER_HPP
 
-# define WIN_WIDTH 2560
-# define WIN_HEIGHT 1400
+# if __linux__
+#  define WIN_WIDTH 1800
+#  define WIN_HEIGHT 900
+# else
+#  define WIN_WIDTH 2560
+#  define WIN_HEIGHT 1400
+# endif
 
 enum {
 	DEFAULT,
@@ -22,7 +27,8 @@ class OpenGL_Manager
 		GLuint _vao, _vbo; // vertex array objects, vertex buffer objects
 		GLuint _shaderProgram, _vertexShader, _fragmentShader;
 		GLint _uniColorMode, _uniModel, _uniScale;
-		GLfloat _rotation_offset;
+		t_vertex _rotation;
+		GLfloat _rotation_speed;
 		GLuint _number_vertices;
 		GLint _key_fill, _key_depth, _color_mode, _key_color_mode;
 		GLfloat _zoom;

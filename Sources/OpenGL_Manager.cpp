@@ -1,11 +1,11 @@
 # include "scop.h"
 
 OpenGL_Manager::OpenGL_Manager( void )
-	: _window(NULL), _rotation_offset(180.0f),
+	: _window(NULL), _rotation_speed(1.5f),
 		_key_fill(0), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _zoom(1.0f), _fill(GL_TRUE)
 {
 	std::cout << "Constructor of OpenGL_Manager called" << std::endl;
-
+	set_vertex(_rotation, 0.0f, 0.0f, 180.0f);
 }
 
 OpenGL_Manager::~OpenGL_Manager( void )
@@ -58,17 +58,22 @@ void OpenGL_Manager::user_inputs( void )
 	if (glfwGetKey(_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(_window, GL_TRUE);
 	
-	GLint key_offset = (glfwGetKey(_window, GLFW_KEY_D) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_A) == GLFW_PRESS);
-	if (key_offset) {
-		_rotation_offset += key_offset;
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::rotate(
-			model,
-			glm::radians(_rotation_offset),
-			glm::vec3(0.0f, 0.0f, 1.0f)
-		);
+	GLint key_rotation_z = (glfwGetKey(_window, GLFW_KEY_D) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_A) == GLFW_PRESS);
+	GLint key_rotation_x = (glfwGetKey(_window, GLFW_KEY_W) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_S) == GLFW_PRESS);
+	GLint key_rotation_y = (glfwGetKey(_window, GLFW_KEY_R) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_E) == GLFW_PRESS);
+	if (key_rotation_z || key_rotation_y || key_rotation_x) {
+		_rotation.x += key_rotation_x * _rotation_speed;
+		_rotation.y += key_rotation_y * _rotation_speed;
+		_rotation.z += key_rotation_z * _rotation_speed;
+		glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::rotate(model, glm::radians(_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(_rotation.x), glm::vec3(-1.0f, 0.0f, 0.0f));
 		glUniformMatrix4fv(_uniModel, 1, GL_FALSE, glm::value_ptr(model));
 	}
+
+	GLint key_rotation_speed = (glfwGetKey(_window, GLFW_KEY_KP_ADD) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS);
+	if (key_rotation_speed && _rotation_speed + 0.1f * key_rotation_speed >= 0)
+		_rotation_speed += 0.1f * key_rotation_speed;
 
 	if (glfwGetKey(_window, GLFW_KEY_C) == GLFW_PRESS && ++_key_color_mode == 1) {
 		++_color_mode;
@@ -96,12 +101,9 @@ void OpenGL_Manager::user_inputs( void )
 		_key_fill = 0;
 	
 	GLint key_zoom = (glfwGetKey(_window, GLFW_KEY_EQUAL) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_MINUS) == GLFW_PRESS);
-	if (key_zoom && _zoom + 0.1 * key_zoom >= 0) {
-		_zoom += 0.1 * key_zoom;
-		glm::mat4 scale =  glm::mat4(_zoom, 0.0f, 0.0f, 0.0f,
-									0.0f, _zoom, 0.0f, 0.0f,
-									0.0f, 0.0f, _zoom, 0.0f,
-									0.0f, 0.0f, 0.0f, 1.0f);
+	if (key_zoom && _zoom + 0.1f * key_zoom >= 0) {
+		_zoom += 0.1f * key_zoom;
+		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(_zoom));
 		glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
 	}
 }
@@ -199,11 +201,7 @@ void OpenGL_Manager::setup_communication_shaders( void )
 
 	_uniModel = glGetUniformLocation(_shaderProgram, "model");
 	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::rotate(
-		model,
-		glm::radians(_rotation_offset),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	);
+	model = glm::rotate(model, glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 	glUniformMatrix4fv(_uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
 	glm::mat4 view = glm::lookAt( // simulates a moving camera
@@ -224,10 +222,7 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
 
 	_uniScale = glGetUniformLocation(_shaderProgram, "scale");
-	glm::mat4 scale =  glm::mat4(_zoom, 0.0f, 0.0f, 0.0f,
-								0.0f, _zoom, 0.0f, 0.0f,
-								0.0f, 0.0f, _zoom, 0.0f,
-								0.0f, 0.0f, 0.0f, 1.0f);
+	glm::mat4 scale =  glm::scale(glm::mat4(1.0f), glm::vec3(_zoom));
 	glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
 }
 
