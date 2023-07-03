@@ -19,7 +19,14 @@ Face::~Face( void )
 
 void Face::add_vertex_array(GLfloat *vertices, size_t & index, t_vertex vert, t_vertex col, t_vertex vert_tex, t_vertex vert_nor)
 {
-	// std::cout << "current value of index: " << index << std::endl; 46794
+	// if (index < 50)
+	// {
+	// 	std::cout << "current value of index: " << index << std::endl;
+	// 	std::cout << "\tvert " << vert.x << ", " << vert.y << ", " << vert.z << std::endl;
+	// 	std::cout << "\tcol " << col.x << ", " << col.y << ", " << col.z << std::endl;
+	// 	std::cout << "\tvert_tex " << vert_tex.x << ", " << vert_tex.y << std::endl;
+	// 	std::cout << "\tvert_nor " << vert_nor.x << ", " << vert_nor.y << ", " << vert_nor.z << std::endl;
+	// }
 	vertices[index] = vert.x;
 	vertices[index + 1] = vert.y;
 	vertices[index + 2] = vert.z;

@@ -13,15 +13,15 @@ ifeq ($(shell uname), Linux)
 # MLX = -lmlx_linux -Lmlx_linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz $(MLX_PATH)
 LINKS		= -L Libs `pkg-config --static --libs glfw3 glew` -lGL -lX11 -lpthread -lXrandr -lXi -ldl Libs/libSOIL.a
 else
-LINKS		= -framework OpenGl -framework AppKit -framework IOkit Libs/mac/libglfw3.a Libs/mac/libGLEW.a Libs/mac/libSOIL.a
-# MLX = -lmlx -Lmlx -framework OpenGl -framework AppKit $(MLX_PATH)
+LINKS		=  -framework OpenGl -framework AppKit -framework IOkit Libs/mac/libglfw3.a Libs/mac/libGLEW.a Libs/mac/libSOIL.a
+# MLX = -lmlx -Lmlx -framework OpenGl -framework AppKit $(MLX_PATH)             #-framework Cocoa -framework CoreVideo
 endif
 
 # ===---===---===---===---===---===---===---===---===---===---===---===---
 
 CC = clang++
 CPPFLAGS = -Wall -Wextra -Werror -O3
-SAN = -fsanitize=address -g
+SAN =# -fsanitize=address -g
 INCLUDES	= -I Includes -I glm# `pkg-config --cflags glfw3`
 # MATH = -lm
 

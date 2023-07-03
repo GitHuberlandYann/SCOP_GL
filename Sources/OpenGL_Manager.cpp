@@ -1,6 +1,6 @@
 # include "scop.h"
 
-OpenGL_Manager::OpenGL_Manager( void ) : _window(NULL), _key_fill(0), _fill(GL_TRUE)
+OpenGL_Manager::OpenGL_Manager( void ) : _window(NULL), _rotation_offset(180.0f), _key_fill(0), _zoom(1.0f), _fill(GL_TRUE)
 {
 	std::cout << "Constructor of OpenGL_Manager called" << std::endl;
 
@@ -53,22 +53,31 @@ void OpenGL_Manager::compile_shader( GLuint ptrShader, std::string name )
 
 void OpenGL_Manager::user_inputs( void )
 {
-		if (glfwGetKey(_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			glfwSetWindowShouldClose(_window, GL_TRUE);
-		if (glfwGetKey(_window, GLFW_KEY_B) == GLFW_PRESS) {
-			if (glIsEnabled(GL_DEPTH_TEST))
-				glDisable(GL_DEPTH_TEST);
-			else
-				glEnable(GL_DEPTH_TEST);
-		}
-		if (glfwGetKey(_window, GLFW_KEY_F) == GLFW_PRESS && ++_key_fill == 1) {
-			if (_fill)
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			else
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			_fill = !_fill;
-		} else if (glfwGetKey(_window, GLFW_KEY_F) == GLFW_RELEASE)
-			_key_fill = 0;
+	if (glfwGetKey(_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(_window, GL_TRUE);
+	if (glfwGetKey(_window, GLFW_KEY_D) == GLFW_PRESS)
+		++_rotation_offset;
+	if (glfwGetKey(_window, GLFW_KEY_A) == GLFW_PRESS)
+		--_rotation_offset;
+	if (glfwGetKey(_window, GLFW_KEY_B) == GLFW_PRESS) {
+		if (glIsEnabled(GL_DEPTH_TEST))
+			glDisable(GL_DEPTH_TEST);
+		else
+			glEnable(GL_DEPTH_TEST);
+	}
+	if (glfwGetKey(_window, GLFW_KEY_F) == GLFW_PRESS && ++_key_fill == 1) {
+		if (_fill)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		else
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		_fill = !_fill;
+	} else if (glfwGetKey(_window, GLFW_KEY_F) == GLFW_RELEASE)
+		_key_fill = 0;
+	
+	if (glfwGetKey(_window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
+		_zoom += 0.1;
+	if (glfwGetKey(_window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
+		_zoom -= 0.1;
 }
 
 // ************************************************************************** //
@@ -107,17 +116,14 @@ void OpenGL_Manager::setup_array_buffer( Parser *parser )
 	glBindVertexArray(_vao);
 
 	_number_vertices = parser->get_number_vertices();
+
 	GLfloat *vertices = new GLfloat[_number_vertices * 11]; // X Y Z, R G B, U V, nX nY nZ
 	std::cout << "total alloc of vertices: " << _number_vertices * 11 << std::endl;
 	parser->fill_vertex_array(vertices);
 
-	std::cout << "first vert: " << vertices[0] << ", " << vertices[1] << ", " << vertices[2] << std::endl;
-	std::cout << "second vert: " << vertices[0 + 11] << ", " << vertices[1 + 11] << ", " << vertices[2 + 11] << std::endl;
-	std::cout << "third vert: " << vertices[0 + 22] << ", " << vertices[1 + 22] << ", " << vertices[2 + 22] << std::endl;
-
 	glGenBuffers(1, &_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, _number_vertices * 11 * sizeof(float), vertices, GL_STATIC_DRAW);
 
 	check_glstate("Vertex buffer successfully created");
 }
@@ -156,7 +162,31 @@ void OpenGL_Manager::setup_shaders( void )
 	GLint posAttrib = glGetAttribLocation(_shaderProgram, "position");
 	glEnableVertexAttribArray(posAttrib);
 
-	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), 0); 
+	if (posAttrib)
+		std::cout << "posAttrib not at index 0, instead found at: " << posAttrib << std::endl;
+
+	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), 0);
+
+	_uniModel = glGetUniformLocation(_shaderProgram, "model");
+
+	glm::mat4 view = glm::lookAt( // simulates a moving camera
+		glm::vec3(2.5f, 2.5f, 2.0f), // world position of camera
+		glm::vec3(0.0f, 0.0f, 0.0f), // point to be centered on screen
+		glm::vec3(0.0f, 0.0f, 1.0f) // 'up' axis, here up is z axis, meaning x y is the ground
+	);
+	GLint uniView = glGetUniformLocation(_shaderProgram, "view");
+	glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
+
+	glm::mat4 proj = glm::perspective( // perspective projection matrix
+		glm::radians(45.0f),                          // vertical fov
+		(GLfloat)WIN_WIDTH / (GLfloat)WIN_HEIGHT,     // aspect ratio of the screen
+		1.0f,                                         // 'near' plane == clipping planes
+		10.0f                                         // 'far' plane
+	);
+	GLint uniProj = glGetUniformLocation(_shaderProgram, "proj");
+	glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
+
+	_uniScale = glGetUniformLocation(_shaderProgram, "scale");
 }
 
 void OpenGL_Manager::main_loop( void )
@@ -164,14 +194,28 @@ void OpenGL_Manager::main_loop( void )
 	check_glstate("setup done, entering main loop");
 
 	std::cout << "number of vertices: " << _number_vertices << std::endl;
+	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 	// main loop cheking for inputs and rendering everything
 	while (!glfwWindowShouldClose(_window))
 	{
 		user_inputs();
 		
-		glClearColor(0.5f, 0.5f, 0.5f, 1.0f); // guess this can be outside while loop
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::rotate(
+			model,
+			glm::radians(_rotation_offset),
+			glm::vec3(0.0f, 0.0f, 1.0f)
+		);
+		glUniformMatrix4fv(_uniModel, 1, GL_FALSE, glm::value_ptr(model));
+
+		glm::mat4 scale =  glm::mat4(_zoom, 0.0f, 0.0f, 0.0f,
+									0.0f, _zoom, 0.0f, 0.0f,
+									0.0f, 0.0f, _zoom, 0.0f,
+									0.0f, 0.0f, 0.0f, 1.0f);
+		glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
 
 		glDrawArrays(GL_TRIANGLES, 0, _number_vertices);
 

@@ -2,7 +2,15 @@
 
 in vec3 position;
 
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 proj;
+uniform mat4 scale;
+
+out vec3 Position;
+
 void main()
 {
-	gl_Position = vec4(position, 1.0);
+	Position = position;
+	gl_Position = proj * view * model * scale * vec4(position, 1.0);
 }

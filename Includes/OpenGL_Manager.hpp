@@ -1,8 +1,8 @@
 #ifndef OPENGL_MANAGER_HPP
 # define OPENGL_MANAGER_HPP
 
-# define WIN_WIDTH 1200
-# define WIN_HEIGHT 900
+# define WIN_WIDTH 2560
+# define WIN_HEIGHT 1400
 
 class Parser;
 
@@ -12,8 +12,11 @@ class OpenGL_Manager
 		GLFWwindow* _window;
 		GLuint _vao, _vbo; // vertex array objects, vertex buffer objects
 		GLuint _shaderProgram, _vertexShader, _fragmentShader;
+		GLint _uniModel, _uniScale;
+		GLfloat _rotation_offset;
 		GLuint _number_vertices;
 		GLint _key_fill;
+		GLfloat _zoom;
 		GLboolean _fill;
 
 		void check_glstate( std::string str );
