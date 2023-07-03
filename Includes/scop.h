@@ -26,6 +26,6 @@ typedef struct {
 # include "utils.h"
 # include "Parser.hpp"
 # include "Face.hpp"
-# include "OpenGl_Manager.hpp"
+# include "OpenGL_Manager.hpp"
 
 #endif
