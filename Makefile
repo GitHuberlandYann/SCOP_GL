@@ -2,7 +2,7 @@ NAME		= scop
 OBJS_DIR	= Objs
 SRCS_DIR	= Sources
 
-FILES		= main utils Exception Face OpenGL_Manager Parser
+FILES		= main utils Exception Face Material OpenGL_Manager Parser
 
 SRCS		= $(addprefix $(SRCS_DIR)/, $(addsuffix .cpp, $(FILES)))
 OBJS 		= $(addprefix $(OBJS_DIR)/, $(addsuffix .o, $(FILES)))
@@ -21,7 +21,7 @@ endif
 
 CC = clang++
 CPPFLAGS = -Wall -Wextra -Werror -O3
-SAN =# -fsanitize=address -g
+SAN = -fsanitize=address -g
 INCLUDES	= -I Includes -I glm# `pkg-config --cflags glfw3`
 # MATH = -lm
 

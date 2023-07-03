@@ -50,7 +50,7 @@ int main( int ac, char **av )
 	delete parser;
 	std::cout << std::endl;
 	render->create_shaders();
-	render->setup_shaders();
+	render->setup_communication_shaders();
 	std::cout << std::endl;
 	render->main_loop();
 

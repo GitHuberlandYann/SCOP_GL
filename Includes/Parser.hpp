@@ -12,6 +12,7 @@ typedef enum {
 }		t_face_mode;
 
 class Face;
+class Material;
 
 class Parser
 {
@@ -24,6 +25,8 @@ class Parser
 		std::vector<t_vertex> _vertices_textures;
 		std::vector<t_vertex> _vertices_normals;
 		std::vector<Face *> _faces;
+		std::vector<Material *> _materials;
+		Material *_current_used_material;
 		unsigned int _number_vertices;
 
 		void push_vertex( t_vertex vertex );
@@ -32,6 +35,8 @@ class Parser
 		int check_vnindex( int num );
 		void add_vertex_face( Face *face, std::string line, size_t & index );
 		void push_face( std::string line );
+		void add_materials( std::string file );
+		void set_material( std::string name );
 		float get_extremum( void );
 
 	public:

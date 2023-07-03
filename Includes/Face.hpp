@@ -3,6 +3,8 @@
 
 # include "scop.h"
 
+class Material;
+
 class Face
 {
 	private:
@@ -10,10 +12,12 @@ class Face
 		std::vector<unsigned int> _vertices;
 		std::vector<unsigned int> _vertices_textures;
 		std::vector<unsigned int> _vertices_normals;
+		t_vertex _color;
+		size_t *_texture_index;
 
-		void add_vertex_array(GLfloat *vertices, size_t & index, t_vertex vert, t_vertex col, t_vertex vert_tex, t_vertex vert_nor);
+		void add_vertex_array(GLfloat *vertices, size_t & index, t_vertex vert, t_vertex vert_tex, t_vertex vert_nor);
 	public:
-		Face( void );
+		Face( Material *mat );
 		~Face( void );
 
 		void add_vertex(int v_num, int vt_num, int vn_num);

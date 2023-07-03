@@ -1,6 +1,6 @@
 #include "scop.h"
 
-Parser::Parser( std::string root ) : _root(root), _face_mode(UNSET), _number_vertices(0)
+Parser::Parser( std::string root ) : _root(root), _face_mode(UNSET), _current_used_material(NULL), _number_vertices(0)
 {
 	std::cout << "Constructor of Parser called" << std::endl;
 	set_vertex(_max_box, -10000, -10000, -10000);
@@ -174,7 +174,7 @@ void Parser::add_vertex_face( Face *face, std::string line, size_t & index )
 /* check if face line is correct, return instance of class Face */
 void Parser::push_face( std::string line )
 {
-	Face *new_face = new Face();
+	Face *new_face = new Face(_current_used_material);
 	_faces.push_back(new_face);
 	size_t index = 2;
 
@@ -190,6 +190,54 @@ void Parser::push_face( std::string line )
 	}
 
 	_number_vertices += (face_size - 2) * 3; // like this for now, but later on we will reuse some vertices to gain memory space
+}
+
+/* read .mtl file and store its info if correct */
+void Parser::add_materials( std::string file )
+{
+	if (!_materials.empty()) {
+		throw DoubleMltlibException();
+	} else if (file.empty()) {
+		throw NoMltlibFileException();
+	} else if (file.size() < 4 || file.compare(file.size() - 4, 4, ".mtl")) {
+		throw MltExtensionException();
+	}
+
+	file = _root + file;
+	std::cout << "Opening file " << file << std::endl;
+	std::ifstream indata(file.c_str());
+	if (!indata.is_open()) {
+		throw InvalidMltFileException();
+	}
+	std::string line;
+	while (!indata.eof()) {
+		if (line.compare(0, 7, "newmtl ")) {
+			std::getline(indata, line);
+			line = trim_spaces(line);
+		}
+		// display_special_characters(line);
+		if (line.empty() || line[0] == '#') {
+			continue ;
+		} else if (!line.compare(0, 7, "newmtl ")) {
+			_materials.push_back(new Material(line.substr(7), indata, line));
+		}
+	}
+	indata.close();
+}
+
+void Parser::set_material( std::string name )
+{
+	std::vector<Material *>::iterator it = _materials.begin();
+	std::vector<Material *>::iterator ite = _materials.end();
+
+	for (; it != ite; it++) {
+		if (!name.compare(0, name.size(), (*it)->get_name())) {
+			_current_used_material = *it;
+			return ;
+		}
+	}
+	std::cout << "Material: " << name << std::endl;
+	throw NoMatchingMaterialException();
 }
 
 float Parser::get_extremum( void )
@@ -243,11 +291,11 @@ void Parser::parse( std::string file )
 			_vertices_normals.push_back(parse_vertex(line, 3, false));
 		} else if (!line.compare(0, 2, "f ")) {
 			push_face(line); //, distribution(generator)); //generate random int from [50:200]
-		} //else if (!line.compare(0, 7, "usemtl ")) {
-		// 	set_material(line.substr(7));
-		// } else if (!line.compare(0, 7, "mtllib ")) {
-		// 	add_materials(line.substr(7));
-		// }
+		} else if (!line.compare(0, 7, "usemtl ")) {
+		 	set_material(line.substr(7));
+		} else if (!line.compare(0, 7, "mtllib ")) {
+			add_materials(line.substr(7));
+		}
 	}
 	indata.close();
 

@@ -1,6 +1,8 @@
 # include "scop.h"
 
-OpenGL_Manager::OpenGL_Manager( void ) : _window(NULL), _rotation_offset(180.0f), _key_fill(0), _zoom(1.0f), _fill(GL_TRUE)
+OpenGL_Manager::OpenGL_Manager( void )
+	: _window(NULL), _rotation_offset(180.0f),
+		_key_fill(0), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _zoom(1.0f), _fill(GL_TRUE)
 {
 	std::cout << "Constructor of OpenGL_Manager called" << std::endl;
 
@@ -55,16 +57,35 @@ void OpenGL_Manager::user_inputs( void )
 {
 	if (glfwGetKey(_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(_window, GL_TRUE);
-	if (glfwGetKey(_window, GLFW_KEY_D) == GLFW_PRESS)
-		++_rotation_offset;
-	if (glfwGetKey(_window, GLFW_KEY_A) == GLFW_PRESS)
-		--_rotation_offset;
-	if (glfwGetKey(_window, GLFW_KEY_B) == GLFW_PRESS) {
+	
+	GLint key_offset = (glfwGetKey(_window, GLFW_KEY_D) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_A) == GLFW_PRESS);
+	if (key_offset) {
+		_rotation_offset += key_offset;
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::rotate(
+			model,
+			glm::radians(_rotation_offset),
+			glm::vec3(0.0f, 0.0f, 1.0f)
+		);
+		glUniformMatrix4fv(_uniModel, 1, GL_FALSE, glm::value_ptr(model));
+	}
+
+	if (glfwGetKey(_window, GLFW_KEY_C) == GLFW_PRESS && ++_key_color_mode == 1) {
+		++_color_mode;
+		if (_color_mode == LAST)
+			_color_mode = DEFAULT;
+		glUniform1i(_uniColorMode, _color_mode);
+	} else if (glfwGetKey(_window, GLFW_KEY_C) == GLFW_RELEASE)
+		_key_color_mode = 0;
+
+	if (glfwGetKey(_window, GLFW_KEY_B) == GLFW_PRESS && ++_key_depth == 1) {
 		if (glIsEnabled(GL_DEPTH_TEST))
 			glDisable(GL_DEPTH_TEST);
 		else
 			glEnable(GL_DEPTH_TEST);
-	}
+	} else if (glfwGetKey(_window, GLFW_KEY_B) == GLFW_RELEASE)
+		_key_depth = 0;
+
 	if (glfwGetKey(_window, GLFW_KEY_F) == GLFW_PRESS && ++_key_fill == 1) {
 		if (_fill)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -74,10 +95,15 @@ void OpenGL_Manager::user_inputs( void )
 	} else if (glfwGetKey(_window, GLFW_KEY_F) == GLFW_RELEASE)
 		_key_fill = 0;
 	
-	if (glfwGetKey(_window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
-		_zoom += 0.1;
-	if (glfwGetKey(_window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
-		_zoom -= 0.1;
+	GLint key_zoom = (glfwGetKey(_window, GLFW_KEY_EQUAL) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_MINUS) == GLFW_PRESS);
+	if (key_zoom && _zoom + 0.1 * key_zoom >= 0) {
+		_zoom += 0.1 * key_zoom;
+		glm::mat4 scale =  glm::mat4(_zoom, 0.0f, 0.0f, 0.0f,
+									0.0f, _zoom, 0.0f, 0.0f,
+									0.0f, 0.0f, _zoom, 0.0f,
+									0.0f, 0.0f, 0.0f, 1.0f);
+		glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
+	}
 }
 
 // ************************************************************************** //
@@ -157,17 +183,28 @@ void OpenGL_Manager::create_shaders( void )
 	check_glstate("Shader program successfully created");
 }
 
-void OpenGL_Manager::setup_shaders( void )
+void OpenGL_Manager::setup_communication_shaders( void )
 {
 	GLint posAttrib = glGetAttribLocation(_shaderProgram, "position");
 	glEnableVertexAttribArray(posAttrib);
-
-	if (posAttrib)
-		std::cout << "posAttrib not at index 0, instead found at: " << posAttrib << std::endl;
-
 	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), 0);
 
+	GLint colAttrib = glGetAttribLocation(_shaderProgram, "color");
+	glEnableVertexAttribArray(colAttrib);
+	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
+
+	// uniforms
+	_uniColorMode = glGetUniformLocation(_shaderProgram, "color_mode");
+	glUniform1i(_uniColorMode, _color_mode);
+
 	_uniModel = glGetUniformLocation(_shaderProgram, "model");
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::rotate(
+		model,
+		glm::radians(_rotation_offset),
+		glm::vec3(0.0f, 0.0f, 1.0f)
+	);
+	glUniformMatrix4fv(_uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
 	glm::mat4 view = glm::lookAt( // simulates a moving camera
 		glm::vec3(2.5f, 2.5f, 2.0f), // world position of camera
@@ -187,6 +224,11 @@ void OpenGL_Manager::setup_shaders( void )
 	glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
 
 	_uniScale = glGetUniformLocation(_shaderProgram, "scale");
+	glm::mat4 scale =  glm::mat4(_zoom, 0.0f, 0.0f, 0.0f,
+								0.0f, _zoom, 0.0f, 0.0f,
+								0.0f, 0.0f, _zoom, 0.0f,
+								0.0f, 0.0f, 0.0f, 1.0f);
+	glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
 }
 
 void OpenGL_Manager::main_loop( void )
@@ -202,20 +244,6 @@ void OpenGL_Manager::main_loop( void )
 		user_inputs();
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::rotate(
-			model,
-			glm::radians(_rotation_offset),
-			glm::vec3(0.0f, 0.0f, 1.0f)
-		);
-		glUniformMatrix4fv(_uniModel, 1, GL_FALSE, glm::value_ptr(model));
-
-		glm::mat4 scale =  glm::mat4(_zoom, 0.0f, 0.0f, 0.0f,
-									0.0f, _zoom, 0.0f, 0.0f,
-									0.0f, 0.0f, _zoom, 0.0f,
-									0.0f, 0.0f, 0.0f, 1.0f);
-		glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
 
 		glDrawArrays(GL_TRIANGLES, 0, _number_vertices);
 
