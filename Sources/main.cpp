@@ -45,7 +45,7 @@ int main( int ac, char **av )
 		return (1);
 	}
 
-	OpenGL_Manager *render = new OpenGL_Manager(parser->get_number_textures());
+	OpenGL_Manager *render = new OpenGL_Manager(parser->get_number_textures(), parser->get_nbvert_index_textures());
 
 	render->setup_window();
 	render->setup_array_buffer(parser);

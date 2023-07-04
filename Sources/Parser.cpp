@@ -38,6 +38,8 @@ Parser::~Parser( void )
 		delete *t_it;
 	}
 	_textures.clear();
+
+	_nbvert_index_textures.clear();
 }
 
 
@@ -191,6 +193,10 @@ void Parser::add_vertex_face( Face *face, std::string line, size_t & index )
 /* check if face line is correct, return instance of class Face */
 void Parser::push_face( std::string line )
 {
+	if (!_materials.empty() && !_current_used_material) {
+		throw MltlibNoUseException();
+	}
+
 	Face *new_face = new Face(_current_used_material);
 	_faces.push_back(new_face);
 	size_t index = 2;
@@ -207,6 +213,9 @@ void Parser::push_face( std::string line )
 	}
 
 	_number_vertices += (face_size - 2) * 3; // like this for now, but later on we will reuse some vertices to gain memory space
+	if (_current_used_material) {
+		_nbvert_index_textures[_nbvert_index_textures.size() - 1].first += (face_size - 2) * 3;
+	}
 }
 
 /* read .mtl file and store its info if correct */
@@ -218,6 +227,8 @@ void Parser::add_materials( std::string file )
 		throw NoMltlibFileException();
 	} else if (file.size() < 4 || file.compare(file.size() - 4, 4, ".mtl")) {
 		throw MltExtensionException();
+	} else if (!_vertices.empty()) {
+		throw MltlibNoStartException();
 	}
 
 	file = _root + file;
@@ -250,6 +261,7 @@ void Parser::set_material( std::string name )
 	for (; it != ite; it++) {
 		if (!name.compare(0, name.size(), (*it)->get_name())) {
 			_current_used_material = *it;
+			_nbvert_index_textures.push_back(std::pair<int, size_t *>(0, (*it)->get_texture_index()));
 			return ;
 		}
 	}
@@ -407,6 +419,11 @@ void Parser::display_content( void )
 	std::cout << "\t-Number of faces: " << _faces.size() << std::endl;
 	std::cout << "\t-Number of vertices passed to shader: " << _number_vertices << std::endl;
 	std::cout << "\t-Number of materials: " << _materials.size() << std::endl;
+	for (size_t index = 0; index < _nbvert_index_textures.size(); index++) {
+		if (!index)
+			std::cout << "\t-material pairs [nb_vert; tex_index]:" << std::endl;
+		std::cout << "\t     " << _nbvert_index_textures[index].first << ", " << *_nbvert_index_textures[index].second << std::endl;
+	}
 	std::cout << "\t-Number of textures: " << _textures.size() << std::endl;
 	std::cout << "\t-box x[" << _min_box.x << ':' << _max_box.x << ']' << std::endl;
 	std::cout << "\t     y[" << _min_box.y << ':' << _max_box.y << ']' << std::endl;
@@ -427,6 +444,11 @@ int Parser::get_number_textures( void )
 std::vector<t_tex *> Parser::get_textures( void )
 {
 	return (_textures);
+}
+
+std::vector<std::pair<int, size_t *> > Parser::get_nbvert_index_textures( void )
+{
+	return (_nbvert_index_textures);
 }
 
 void Parser::fill_vertex_array(GLfloat *vertices)

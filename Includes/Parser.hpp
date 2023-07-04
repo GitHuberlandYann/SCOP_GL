@@ -33,6 +33,7 @@ class Parser
 		std::vector<Face *> _faces;
 		std::vector<Material *> _materials;
 		std::vector<t_tex *> _textures;
+		std::vector<std::pair<int, size_t *> > _nbvert_index_textures;
 		Material *_current_used_material;
 		unsigned int _number_vertices;
 
@@ -59,6 +60,7 @@ class Parser
 		unsigned int get_number_vertices( void );
 		int get_number_textures( void );
 		std::vector<t_tex *> get_textures( void );
+		std::vector<std::pair<int, size_t *> > get_nbvert_index_textures( void );
 		void fill_vertex_array(GLfloat *vertices);
 };
 

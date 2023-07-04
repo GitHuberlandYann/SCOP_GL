@@ -1,11 +1,20 @@
 # include "scop.h"
 
-OpenGL_Manager::OpenGL_Manager( GLint nb_textures )
+OpenGL_Manager::OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, size_t *> > vert_tex_pair )
 	: _window(NULL), _nb_textures(nb_textures), _textures(NULL), _rotation_speed(1.5f),
-		_key_fill(0), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _zoom(1.0f), _fill(GL_TRUE)
+		_key_fill(0), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _zoom(1.0f), _fill(GL_TRUE),
+		_vtp_size(vert_tex_pair.size())
 {
 	std::cout << "Constructor of OpenGL_Manager called" << std::endl << std::endl;
 	set_vertex(_rotation, 0.0f, 0.0f, 180.0f);
+
+	for (size_t index = 0; index < _vtp_size; index++) {
+		size_t tex_index = *vert_tex_pair[index].second;
+		int itex_index = -1;
+		if (tex_index != std::string::npos)
+			itex_index = (int)tex_index;
+		_vert_tex_pair.push_back(std::pair<int, int>(vert_tex_pair[index].first, itex_index));
+	}
 }
 
 OpenGL_Manager::~OpenGL_Manager( void )
@@ -245,6 +254,9 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	// uniforms
 	_uniColorMode = glGetUniformLocation(_shaderProgram, "color_mode");
 	glUniform1i(_uniColorMode, _color_mode);
+	
+	_uniTexIndex = glGetUniformLocation(_shaderProgram, "tex_index");
+	glUniform1i(_uniTexIndex, -1);
 
 	_uniModel = glGetUniformLocation(_shaderProgram, "model");
 	glm::mat4 model = glm::mat4(1.0f);
@@ -327,9 +339,13 @@ void OpenGL_Manager::main_loop( void )
 		if (!_nb_textures) {
 			glDrawArrays(GL_TRIANGLES, 0, _number_vertices);
 		} else {
-			glDrawArrays(GL_TRIANGLES, 0, _number_vertices);
-			// glDrawArrays(GL_TRIANGLES, 0, _number_until_first change);
-			// now use tex1
+			size_t start_index = 0;
+			for (size_t index = 0; index < _vtp_size; index++) {
+				glUniform1i(_uniTexIndex, _vert_tex_pair[index].second);
+
+				glDrawArrays(GL_TRIANGLES, start_index, _vert_tex_pair[index].first);
+				start_index += _vert_tex_pair[index].first;
+			}
 		}
 
 		glfwSwapBuffers(_window);

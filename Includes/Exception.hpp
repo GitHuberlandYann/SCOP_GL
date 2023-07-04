@@ -51,6 +51,18 @@ class InvalidMltException : public std::exception
 		const char *what() const throw();
 };
 
+class MltlibNoUseException : public std::exception
+{
+	public:
+		const char *what() const throw();
+};
+
+class MltlibNoStartException : public std::exception
+{
+	public:
+		const char *what() const throw();
+};
+
 class NoMatchingMaterialException : public std::exception
 {
 	public:

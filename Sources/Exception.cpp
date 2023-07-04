@@ -40,6 +40,16 @@ const char* InvalidMltException::what() const throw()
 	return ("[InvalidMltException] Error in .mlt file.");
 }
 
+const char* MltlibNoUseException::what() const throw()
+{
+	return ("[MltlibNoUseException] Mltlib line without usemlt line afterwards.");
+}
+
+const char* MltlibNoStartException::what() const throw()
+{
+	return ("[MltlibNoStartException] Mltlib line after v line.");
+}
+
 const char* NoMatchingMaterialException::what() const throw()
 {
 	return ("[NoMatchingMaterialException] No matching material in .mlt file.");
