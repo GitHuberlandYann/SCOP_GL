@@ -45,12 +45,12 @@ int main( int ac, char **av )
 		return (1);
 	}
 
-	OpenGL_Manager *render = new OpenGL_Manager();
+	OpenGL_Manager *render = new OpenGL_Manager(parser->get_number_textures());
 
 	render->setup_window();
 	render->setup_array_buffer(parser);
 	std::cout << std::endl;
-	render->create_shaders(parser);
+	render->create_shaders();
 	render->setup_communication_shaders();
 	render->load_textures(parser);
 	delete parser;

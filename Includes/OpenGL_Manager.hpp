@@ -12,7 +12,7 @@
 enum {
 	DEFAULT,
 	MATERIAL,
-	// TEXTURE,
+	TEXTURE,
 	// GRAY,
 	GRADIENT,
 	LAST
@@ -37,16 +37,16 @@ class OpenGL_Manager
 
 		void check_glstate( std::string str );
 		void compile_shader( GLuint ptrShader, std::string name );
-		std::string create_fragment_shader( Parser *parser, std::string data );
+		std::string create_fragment_shader( std::string data );
 		void user_inputs( void );
 
 	public:
-		OpenGL_Manager( void );
+		OpenGL_Manager( GLint nb_textures );
 		~OpenGL_Manager( void );
 
 		void setup_window( void );
 		void setup_array_buffer( Parser *parser );
-		void create_shaders( Parser *parser );
+		void create_shaders( void );
 		void setup_communication_shaders( void );
 		void load_textures( Parser *parser );
 		void main_loop( void );

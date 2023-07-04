@@ -1,7 +1,7 @@
 # include "scop.h"
 
-OpenGL_Manager::OpenGL_Manager( void )
-	: _window(NULL), _nb_textures(0), _textures(NULL), _rotation_speed(1.5f),
+OpenGL_Manager::OpenGL_Manager( GLint nb_textures )
+	: _window(NULL), _nb_textures(nb_textures), _textures(NULL), _rotation_speed(1.5f),
 		_key_fill(0), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _zoom(1.0f), _fill(GL_TRUE)
 {
 	std::cout << "Constructor of OpenGL_Manager called" << std::endl << std::endl;
@@ -55,11 +55,43 @@ void OpenGL_Manager::compile_shader( GLuint ptrShader, std::string name )
 	}
 }
 
-std::string OpenGL_Manager::create_fragment_shader( Parser *parser, std::string data )
+std::string OpenGL_Manager::create_fragment_shader( std::string data )
 {
-	(void)parser;
-	display_special_characters(data);
-	return (data);
+	std::string res;
+
+	size_t tex_index = data.find("TEX"), out_index = data.find("OUT");
+	if (tex_index == std::string::npos) {
+		std::cerr << "no TEX in shader texture, please fix" << std::endl;
+		return (res);
+	} else if (out_index == std::string::npos) {
+		std::cerr << "no OUT in shader texture, please fix" << std::endl;
+		return (res);
+	}
+	
+	res = data.substr(0, tex_index);
+	if (_nb_textures) {
+		res += "\r\n";
+		for (int index = 0; index < _nb_textures; index++) {
+			res += "uniform sampler2D tex" + std::to_string(index) + ";\r\n";
+		}
+	}
+
+	res += data.substr(tex_index + 3, out_index - (tex_index + 3));
+	if (_nb_textures) {
+		res += "if (Tex_index[0] == 0 || Tex_index[1] == -1) {\r\n\t\toutColor = vec4(Color, 1.0);\r\n\t}";
+		for (int index = 0; index < _nb_textures; index++) {
+			std::string num = std::to_string(index);
+			res += " else if (Tex_index[1] == " + num + ") {\r\n\t\toutColor = texture(tex" + num + ", Texcoord);\r\n\t}";
+		}
+		res += "\r\n";
+	} else {
+		res += "outColor = vec4(Color, 1.0);";
+	}
+
+	res += data.substr(out_index + 3);
+	// display_special_characters(res);
+	// std::cout << res;
+	return (res);
 }
 
 void OpenGL_Manager::user_inputs( void )
@@ -165,7 +197,7 @@ void OpenGL_Manager::setup_array_buffer( Parser *parser )
 	check_glstate("Vertex buffer successfully created");
 }
 
-void OpenGL_Manager::create_shaders( Parser *parser )
+void OpenGL_Manager::create_shaders( void )
 {
 	std::string vertex_shader_data = get_file_content("Sources/Shaders/vertex.glsl");
 	char *vertexSource = &vertex_shader_data[0];
@@ -175,7 +207,7 @@ void OpenGL_Manager::create_shaders( Parser *parser )
 	compile_shader(_vertexShader, "vertex");
 
 	std::string fragment_shader_data = get_file_content("Sources/Shaders/fragment.glsl");
-	fragment_shader_data = create_fragment_shader(parser, fragment_shader_data);
+	fragment_shader_data = create_fragment_shader(fragment_shader_data);
 	char *fragmentSource = &fragment_shader_data[0];
 
 	_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -197,6 +229,7 @@ void OpenGL_Manager::create_shaders( Parser *parser )
 
 void OpenGL_Manager::setup_communication_shaders( void )
 {
+	// attributes
 	GLint posAttrib = glGetAttribLocation(_shaderProgram, "position");
 	glEnableVertexAttribArray(posAttrib);
 	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), 0);
@@ -204,6 +237,10 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	GLint colAttrib = glGetAttribLocation(_shaderProgram, "color");
 	glEnableVertexAttribArray(colAttrib);
 	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
+
+	GLint texAttrib = glGetAttribLocation(_shaderProgram, "texcoord");
+	glEnableVertexAttribArray(texAttrib);
+	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
 
 	// uniforms
 	_uniColorMode = glGetUniformLocation(_shaderProgram, "color_mode");
@@ -240,7 +277,6 @@ void OpenGL_Manager::setup_communication_shaders( void )
 
 void OpenGL_Manager::load_textures( Parser *parser )
 {
-	_nb_textures = parser->get_number_textures();
 	if (!_nb_textures) {
 		std::cout << "no texture to load on shader" << std::endl;
 		return ;
@@ -288,7 +324,13 @@ void OpenGL_Manager::main_loop( void )
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glDrawArrays(GL_TRIANGLES, 0, _number_vertices);
+		if (!_nb_textures) {
+			glDrawArrays(GL_TRIANGLES, 0, _number_vertices);
+		} else {
+			glDrawArrays(GL_TRIANGLES, 0, _number_vertices);
+			// glDrawArrays(GL_TRIANGLES, 0, _number_until_first change);
+			// now use tex1
+		}
 
 		glfwSwapBuffers(_window);
 		glfwPollEvents();
