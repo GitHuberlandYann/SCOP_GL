@@ -11,6 +11,12 @@ typedef enum {
 	VTN
 }		t_face_mode;
 
+typedef struct {
+	unsigned char *texture;
+	int width;
+	int height;
+}				t_tex;
+
 class Face;
 class Material;
 
@@ -26,6 +32,7 @@ class Parser
 		std::vector<t_vertex> _vertices_normals;
 		std::vector<Face *> _faces;
 		std::vector<Material *> _materials;
+		std::vector<t_tex *> _textures;
 		Material *_current_used_material;
 		unsigned int _number_vertices;
 
@@ -38,15 +45,20 @@ class Parser
 		void add_materials( std::string file );
 		void set_material( std::string name );
 		float get_extremum( void );
+		int check_duplicate_xpm( std::vector<Material *>::iterator it, std::vector<Material *>::iterator ite );
 
 	public:
 		Parser( std::string root );
 		~Parser( void );
 
 		void parse( std::string file );
+		void load_textures( void );
 		void center_object( void );
 		void display_content( void );
+
 		unsigned int get_number_vertices( void );
+		int get_number_textures( void );
+		std::vector<t_tex *> get_textures( void );
 		void fill_vertex_array(GLfloat *vertices);
 };
 

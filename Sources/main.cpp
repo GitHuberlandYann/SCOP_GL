@@ -34,6 +34,8 @@ int main( int ac, char **av )
 
 	try {
 		parser->parse(file);
+		std::cout << std::endl;
+		parser->load_textures();
 		parser->center_object();
 		parser->display_content();
 	} catch (std::exception & e) {
@@ -47,10 +49,11 @@ int main( int ac, char **av )
 
 	render->setup_window();
 	render->setup_array_buffer(parser);
-	delete parser;
 	std::cout << std::endl;
-	render->create_shaders();
+	render->create_shaders(parser);
 	render->setup_communication_shaders();
+	render->load_textures(parser);
+	delete parser;
 	std::cout << std::endl;
 	render->main_loop();
 

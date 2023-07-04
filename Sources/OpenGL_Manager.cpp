@@ -1,16 +1,18 @@
 # include "scop.h"
 
 OpenGL_Manager::OpenGL_Manager( void )
-	: _window(NULL), _rotation_speed(1.5f),
+	: _window(NULL), _nb_textures(0), _textures(NULL), _rotation_speed(1.5f),
 		_key_fill(0), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _zoom(1.0f), _fill(GL_TRUE)
 {
-	std::cout << "Constructor of OpenGL_Manager called" << std::endl;
+	std::cout << "Constructor of OpenGL_Manager called" << std::endl << std::endl;
 	set_vertex(_rotation, 0.0f, 0.0f, 180.0f);
 }
 
 OpenGL_Manager::~OpenGL_Manager( void )
 {
 	std::cout << "Destructor of OpenGL_Manager called" << std::endl;
+	glDeleteTextures(_nb_textures, _textures);
+
 	glDeleteProgram(_shaderProgram);
     glDeleteShader(_fragmentShader);
     glDeleteShader(_vertexShader);
@@ -51,6 +53,13 @@ void OpenGL_Manager::compile_shader( GLuint ptrShader, std::string name )
 		std::cerr << name << " shader did not compile, error log:" << std::endl << buffer << std::endl;
 		exit(1);
 	}
+}
+
+std::string OpenGL_Manager::create_fragment_shader( Parser *parser, std::string data )
+{
+	(void)parser;
+	display_special_characters(data);
+	return (data);
 }
 
 void OpenGL_Manager::user_inputs( void )
@@ -156,7 +165,7 @@ void OpenGL_Manager::setup_array_buffer( Parser *parser )
 	check_glstate("Vertex buffer successfully created");
 }
 
-void OpenGL_Manager::create_shaders( void )
+void OpenGL_Manager::create_shaders( Parser *parser )
 {
 	std::string vertex_shader_data = get_file_content("Sources/Shaders/vertex.glsl");
 	char *vertexSource = &vertex_shader_data[0];
@@ -166,6 +175,7 @@ void OpenGL_Manager::create_shaders( void )
 	compile_shader(_vertexShader, "vertex");
 
 	std::string fragment_shader_data = get_file_content("Sources/Shaders/fragment.glsl");
+	fragment_shader_data = create_fragment_shader(parser, fragment_shader_data);
 	char *fragmentSource = &fragment_shader_data[0];
 
 	_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -224,6 +234,44 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	_uniScale = glGetUniformLocation(_shaderProgram, "scale");
 	glm::mat4 scale =  glm::scale(glm::mat4(1.0f), glm::vec3(_zoom));
 	glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
+	
+	check_glstate("Communication with shader program successfully established");
+}
+
+void OpenGL_Manager::load_textures( Parser *parser )
+{
+	_nb_textures = parser->get_number_textures();
+	if (!_nb_textures) {
+		std::cout << "no texture to load on shader" << std::endl;
+		return ;
+	}
+
+	std::vector<t_tex *> ui_textures = parser->get_textures();
+
+	_textures = new GLuint[_nb_textures]; // malloc todo
+	glGenTextures(_nb_textures, _textures);
+	
+	for (GLint index = 0; index < _nb_textures; index++)
+	{
+		glActiveTexture(GL_TEXTURE0 + index);
+		glBindTexture(GL_TEXTURE_2D, _textures[index]);
+
+		// load image as texture
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, ui_textures[index]->width, ui_textures[index]->height,
+					0, GL_RGB, GL_UNSIGNED_BYTE, ui_textures[index]->texture);
+
+		std::string tex_str = "tex" + std::to_string(index);
+		glUniform1i(glGetUniformLocation(_shaderProgram, tex_str.c_str()), index); // sampler2D #index in fragment shader
+		
+		// set settings for texture wraping and size modif
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	}
+
+	std::string success_msg = "Succesfully loaded " + std::to_string(_nb_textures) + " to shader";
+	check_glstate(success_msg);
 }
 
 void OpenGL_Manager::main_loop( void )

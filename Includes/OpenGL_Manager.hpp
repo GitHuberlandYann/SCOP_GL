@@ -26,7 +26,8 @@ class OpenGL_Manager
 		GLFWwindow* _window;
 		GLuint _vao, _vbo; // vertex array objects, vertex buffer objects
 		GLuint _shaderProgram, _vertexShader, _fragmentShader;
-		GLint _uniColorMode, _uniModel, _uniScale;
+		GLint _uniColorMode, _uniModel, _uniScale, _nb_textures;
+		GLuint *_textures;
 		t_vertex _rotation;
 		GLfloat _rotation_speed;
 		GLuint _number_vertices;
@@ -36,6 +37,7 @@ class OpenGL_Manager
 
 		void check_glstate( std::string str );
 		void compile_shader( GLuint ptrShader, std::string name );
+		std::string create_fragment_shader( Parser *parser, std::string data );
 		void user_inputs( void );
 
 	public:
@@ -44,8 +46,9 @@ class OpenGL_Manager
 
 		void setup_window( void );
 		void setup_array_buffer( Parser *parser );
-		void create_shaders( void );
+		void create_shaders( Parser *parser );
 		void setup_communication_shaders( void );
+		void load_textures( Parser *parser );
 		void main_loop( void );
 };
 

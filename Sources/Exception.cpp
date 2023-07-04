@@ -50,6 +50,11 @@ const char* InvalidRGBException::what() const throw()
 	return ("[InvalidRGBException] RGB in .mlt must be in range [0:1].");
 }
 
+const char* SOILFailureException::what() const throw()
+{
+	return ("[SOILFailureException]");
+}
+
 const char* EmptyObjectException::what() const throw()
 {
 	return ("[EmptyObjectException] .obj has no faces.");
