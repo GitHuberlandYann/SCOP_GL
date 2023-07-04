@@ -26,13 +26,11 @@ class OpenGL_Manager
 		GLFWwindow* _window;
 		GLuint _vao, _vbo; // vertex array objects, vertex buffer objects
 		GLuint _shaderProgram, _vertexShader, _fragmentShader;
-		GLint _uniColorMode, _uniTexIndex, _uniModel, _uniScale, _nb_textures;
+		GLint _uniColorMode, _uniTexIndex, _uniModel, _uniScale, _nb_textures, _number_vertices;
 		GLuint *_textures;
-		t_vertex _rotation;
-		GLfloat _rotation_speed;
-		GLuint _number_vertices;
+		t_vertex _rotation, _background_color;
+		GLfloat _rotation_speed, _zoom;
 		GLint _key_fill, _key_depth, _color_mode, _key_color_mode;
-		GLfloat _zoom;
 		GLboolean _fill;
 		std::vector<std::pair<int, int> > _vert_tex_pair;
 		size_t _vtp_size;

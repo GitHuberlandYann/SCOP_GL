@@ -419,11 +419,11 @@ void Parser::display_content( void )
 	std::cout << "\t-Number of faces: " << _faces.size() << std::endl;
 	std::cout << "\t-Number of vertices passed to shader: " << _number_vertices << std::endl;
 	std::cout << "\t-Number of materials: " << _materials.size() << std::endl;
-	for (size_t index = 0; index < _nbvert_index_textures.size(); index++) {
-		if (!index)
-			std::cout << "\t-material pairs [nb_vert; tex_index]:" << std::endl;
-		std::cout << "\t     " << _nbvert_index_textures[index].first << ", " << *_nbvert_index_textures[index].second << std::endl;
-	}
+	// for (size_t index = 0; index < _nbvert_index_textures.size(); index++) {
+	// 	if (!index)
+	// 		std::cout << "\t-material pairs [nb_vert; tex_index]:" << std::endl;
+	// 	std::cout << "\t     " << _nbvert_index_textures[index].first << ", " << *_nbvert_index_textures[index].second << std::endl;
+	// }
 	std::cout << "\t-Number of textures: " << _textures.size() << std::endl;
 	std::cout << "\t-box x[" << _min_box.x << ':' << _max_box.x << ']' << std::endl;
 	std::cout << "\t     y[" << _min_box.y << ':' << _max_box.y << ']' << std::endl;
@@ -462,5 +462,5 @@ void Parser::fill_vertex_array(GLfloat *vertices)
 		(*it)->fill_vertex_array(vertices, index, _face_mode, _vertices, _vertices_textures, _vertices_normals);
 	}
 
-	std::cout << "vertices filled up to index " << index << std::endl;
+	// std::cout << "vertices filled up to index " << index << std::endl;
 }

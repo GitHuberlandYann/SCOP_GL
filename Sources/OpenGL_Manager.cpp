@@ -1,12 +1,13 @@
 # include "scop.h"
 
 OpenGL_Manager::OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, size_t *> > vert_tex_pair )
-	: _window(NULL), _nb_textures(nb_textures), _textures(NULL), _rotation_speed(1.5f),
-		_key_fill(0), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _zoom(1.0f), _fill(GL_TRUE),
+	: _window(NULL), _nb_textures(nb_textures), _textures(NULL), _rotation_speed(1.5f), _zoom(1.0f),
+		_key_fill(0), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _fill(GL_TRUE),
 		_vtp_size(vert_tex_pair.size())
 {
 	std::cout << "Constructor of OpenGL_Manager called" << std::endl << std::endl;
 	set_vertex(_rotation, 0.0f, 0.0f, 180.0f);
+	set_vertex(_background_color, 0.5f, 0.5f, 0.5f);
 
 	for (size_t index = 0; index < _vtp_size; index++) {
 		size_t tex_index = *vert_tex_pair[index].second;
@@ -31,6 +32,9 @@ OpenGL_Manager::~OpenGL_Manager( void )
 
 	glfwMakeContextCurrent(NULL);
     glfwTerminate();
+
+	delete [] _textures;
+	_vert_tex_pair.clear();
 }
 
 // ************************************************************************** //
@@ -156,6 +160,16 @@ void OpenGL_Manager::user_inputs( void )
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(_zoom));
 		glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
 	}
+
+	GLint key_col_r = (glfwGetKey(_window, GLFW_KEY_KP_7) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_4) == GLFW_PRESS);
+	GLint key_col_g = (glfwGetKey(_window, GLFW_KEY_KP_8) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_5) == GLFW_PRESS);
+	GLint key_col_b = (glfwGetKey(_window, GLFW_KEY_KP_9) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_6) == GLFW_PRESS);
+	if (key_col_r || key_col_g || key_col_b) {
+		_background_color.x = glm::clamp(_background_color.x + key_col_r * 0.01f, 0.f, 1.f);
+		_background_color.y = glm::clamp(_background_color.y + key_col_g * 0.01f, 0.f, 1.f);
+		_background_color.z = glm::clamp(_background_color.z + key_col_b * 0.01f, 0.f, 1.f);
+		glClearColor(_background_color.x, _background_color.y, _background_color.z, 1.0f);
+	}
 }
 
 // ************************************************************************** //
@@ -183,7 +197,6 @@ void OpenGL_Manager::setup_window( void )
 	glewInit();
 	
 	glEnable(GL_DEPTH_TEST);
-	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	check_glstate("Window successfully created");
 }
@@ -203,6 +216,7 @@ void OpenGL_Manager::setup_array_buffer( Parser *parser )
 	glBindBuffer(GL_ARRAY_BUFFER, _vbo);
 	glBufferData(GL_ARRAY_BUFFER, _number_vertices * 11 * sizeof(float), vertices, GL_STATIC_DRAW);
 
+	delete [] vertices;
 	check_glstate("Vertex buffer successfully created");
 }
 
@@ -326,12 +340,24 @@ void OpenGL_Manager::main_loop( void )
 {
 	check_glstate("setup done, entering main loop");
 
-	std::cout << "number of vertices: " << _number_vertices << std::endl;
-	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+	std::cout << "number of vertices: " << _number_vertices << std::endl << std::endl;
+	glClearColor(_background_color.x, _background_color.y, _background_color.z, 1.0f);
+
+	// std::cout << "60fps game is 16.6666 ms/frame; 30fps game is 33.3333 ms/frame." << std::endl; 
+	// double lastTime = glfwGetTime();
+	// int nbFrames = 0;
 
 	// main loop cheking for inputs and rendering everything
 	while (!glfwWindowShouldClose(_window))
 	{
+		// double currentTime = glfwGetTime();
+		// nbFrames++;
+		// if ( currentTime - lastTime >= 1.0 ){
+		// 	std::cout << 1000.0/double(nbFrames) << " ms/frame; " << nbFrames << " fps" << std::endl;
+		// 	nbFrames = 0;
+		// 	lastTime += 1.0;
+		// }
+
 		user_inputs();
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -352,5 +378,6 @@ void OpenGL_Manager::main_loop( void )
 		glfwPollEvents();
 	}
 
+	std::cout << std::endl;
 	check_glstate("main loop successfully exited");
 }
