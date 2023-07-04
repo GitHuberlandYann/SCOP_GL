@@ -1,7 +1,7 @@
 # SCOP_GL
 .obj rendering using OpenGL
 
-Project done during my formation at 19. https://campus19.be/
+Project done during my formation at [19](https://campus19.be/).
 
 ## Controls (Qwerty)
 ```
