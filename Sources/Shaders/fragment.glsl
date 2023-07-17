@@ -2,7 +2,7 @@
 
 in vec3 Color;
 in vec2 Texcoord;
-in vec2 Tex_index;
+in vec3 Tex_index;
 
 out vec4 outColor;
 TEX

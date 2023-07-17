@@ -5,13 +5,15 @@ Project done during my formation at [19](https://campus19.be/).
 
 ## Controls (Qwerty)
 ```
-WSADER      - turn object around
+WSADER      - rotate object around
 +- (PAD)    - change movement speed
 +-          - resize object
 
 C           - switch color mode (DEFAULT-MATERIAL-TEXTURE-GRADIENT)
 B           - enable/disable GL_DEPTH_TEST
 F           - fill/unfill faces with color
+I           - invert colors
+NM          - next/previous section of object is displayed
 
 74 (PAD)    - change R channel of background color
 85 (PAD)    - change G channel of background color

@@ -77,4 +77,10 @@ void OpenGL_Manager::user_inputs( void )
 			_section = 0;
 	} else if (!key_next_section)
 		_key_section = 0;
+	
+	if (glfwGetKey(_window, GLFW_KEY_I) == GLFW_PRESS && ++_key_invert == 1) {
+		_invert_col = !_invert_col;
+		glUniform1i(_uniInvert, _invert_col);
+	} else if (glfwGetKey(_window, GLFW_KEY_I) == GLFW_RELEASE)
+		_key_invert = 0;
 }

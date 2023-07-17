@@ -3,7 +3,7 @@
 OpenGL_Manager::OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, size_t *> > vert_tex_pair )
 	: _window(NULL), _nb_textures(nb_textures), _textures(NULL), _rotation_speed(1.5f), _zoom(1.0f),
 		_key_fill(0), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _key_section(0),
-		_fill(GL_TRUE), _vtp_size(vert_tex_pair.size())
+		_invert_col(0), _key_invert(0), _fill(GL_TRUE), _vtp_size(vert_tex_pair.size())
 {
 	std::cout << "Constructor of OpenGL_Manager called" << std::endl << std::endl;
 	set_vertex(_rotation, 0.0f, 0.0f, 180.0f);
@@ -102,6 +102,7 @@ std::string OpenGL_Manager::create_fragment_shader( std::string data )
 		res += "outColor = vec4(Color, 1.0);";
 	}
 
+	res += "\r\n\tif (Tex_index[2] == 1) {\r\n\t\toutColor = vec4(1.0, 1.0, 1.0, 2.0) - outColor;\r\n\t}";
 	res += data.substr(out_index + 3);
 	// display_special_characters(res);
 	// std::cout << res;
@@ -211,6 +212,9 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	
 	_uniTexIndex = glGetUniformLocation(_shaderProgram, "tex_index");
 	glUniform1i(_uniTexIndex, -1);
+
+	_uniInvert = glGetUniformLocation(_shaderProgram, "invert_color");
+	glUniform1i(_uniInvert, _invert_col);
 
 	_uniModel = glGetUniformLocation(_shaderProgram, "model");
 	glm::mat4 model = glm::mat4(1.0f);
