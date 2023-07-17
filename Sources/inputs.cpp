@@ -44,7 +44,7 @@ void OpenGL_Manager::user_inputs( void )
 
 	if (glfwGetKey(_window, GLFW_KEY_F) == GLFW_PRESS && ++_key_fill == 1) {
 		if (_fill)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //GL_POINT
 		else
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		_fill = !_fill;

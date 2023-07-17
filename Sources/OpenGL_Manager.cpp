@@ -285,7 +285,9 @@ void OpenGL_Manager::main_loop( void )
 	check_glstate("setup done, entering main loop");
 
 	std::cout << "number of vertices: " << _number_vertices << std::endl << std::endl;
+	
 	glClearColor(_background_color.x, _background_color.y, _background_color.z, 1.0f);
+	// glPointSize(10.0f);
 
 	// std::cout << "60fps game is 16.6666 ms/frame; 30fps game is 33.3333 ms/frame." << std::endl; 
 	// double lastTime = glfwGetTime();
