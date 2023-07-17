@@ -18,6 +18,12 @@ enum {
 	LAST
 };
 
+enum {
+	POSATTRIB,
+	COLATTRIB,
+	TEXATTRIB
+};
+
 class Parser;
 
 class OpenGL_Manager
@@ -26,11 +32,11 @@ class OpenGL_Manager
 		GLFWwindow* _window;
 		GLuint _vao, _vbo; // vertex array objects, vertex buffer objects
 		GLuint _shaderProgram, _vertexShader, _fragmentShader;
-		GLint _uniColorMode, _uniTexIndex, _uniModel, _uniScale, _nb_textures, _number_vertices;
+		GLint _uniColorMode, _uniTexIndex, _uniModel, _uniScale, _nb_textures, _number_vertices, _section;
 		GLuint *_textures;
 		t_vertex _rotation, _background_color;
 		GLfloat _rotation_speed, _zoom;
-		GLint _key_fill, _key_depth, _color_mode, _key_color_mode;
+		GLint _key_fill, _key_depth, _color_mode, _key_color_mode, _key_section;
 		GLboolean _fill;
 		std::vector<std::pair<int, int> > _vert_tex_pair;
 		size_t _vtp_size;

@@ -5,13 +5,32 @@ Parser::Parser( std::string root ) : _root(root), _face_mode(UNSET), _current_us
 	std::cout << "Constructor of Parser called" << std::endl << std::endl;
 	set_vertex(_max_box, -10000, -10000, -10000);
 	set_vertex(_min_box, 10000, 10000, 10000);
+	set_vertex(_null_vertex, 0.0f, 0.0f, 0.0f);
 }
 
 Parser::~Parser( void )
 {
 	std::cout << "Destructor of Parser called" << std::endl;
+	
+	std::vector<t_vertex *>::iterator v_it = _vertices.begin();
+	std::vector<t_vertex *>::iterator v_ite = _vertices.end();
+	for (; v_it != v_ite; v_it++) {
+		delete *v_it;
+	}
 	_vertices.clear();
+
+	std::vector<t_vertex *>::iterator vt_it = _vertices_textures.begin();
+	std::vector<t_vertex *>::iterator vt_ite = _vertices_textures.end();
+	for (; vt_it != vt_ite; vt_it++) {
+		delete *vt_it;
+	}
 	_vertices_textures.clear();
+
+	std::vector<t_vertex *>::iterator vn_it = _vertices_normals.begin();
+	std::vector<t_vertex *>::iterator vn_ite = _vertices_normals.end();
+	for (; vn_it != vn_ite; vn_it++) {
+		delete *vn_it;
+	}
 	_vertices_normals.clear();
 
 	std::vector<Face *>::iterator it = _faces.begin();
@@ -62,7 +81,20 @@ void Parser::push_vertex( t_vertex vertex )
 		_min_box.y = vertex.y;
 	if (vertex.z < _min_box.z)
 		_min_box.z = vertex.z;
-	_vertices.push_back(vertex);
+	t_vertex *res = new t_vertex;
+	set_vertex(*res, vertex.x, vertex.y, vertex.z);
+	_vertices.push_back(res);
+}
+
+void Parser::push_vertextn( t_vertex vertex, bool norm )
+{
+	t_vertex *res = new t_vertex;
+	set_vertex(*res, vertex.x, vertex.y, vertex.z);
+	if (norm) {
+		_vertices_normals.push_back(res);
+	} else {
+		_vertices_textures.push_back(res);
+	}
 }
 
 int Parser::check_vindex( int num )
@@ -173,20 +205,25 @@ void Parser::add_vertex_face( Face *face, std::string line, size_t & index )
 		}
 	}
 
+	v_num = check_vindex(v_num);
 	switch (_face_mode) {
 		case UNSET:
 			throw InvalidFaceException();
 		case ONLY_V:
-			face->add_vertex(check_vindex(v_num), -1, -1);
+			face->add_vertex(_vertices[v_num], &_null_vertex, &_null_vertex);
 			break;
 		case ONLY_VT:
-			face->add_vertex(check_vindex(v_num), check_vtindex(vt_num), -1);
+			vt_num = check_vtindex(vt_num);
+			face->add_vertex(_vertices[v_num], _vertices_textures[vt_num], &_null_vertex);
 			break;
 		case ONLY_VN:
-			face->add_vertex(check_vindex(v_num), -1, check_vnindex(vn_num));
+			vn_num = check_vnindex(vn_num);
+			face->add_vertex(_vertices[v_num], &_null_vertex, _vertices_normals[vn_num]);
 			break;
 		case VTN:
-			face->add_vertex(check_vindex(v_num), check_vtindex(vt_num), check_vnindex(vn_num));
+			vt_num = check_vtindex(vt_num);
+			vn_num = check_vnindex(vn_num);
+			face->add_vertex(_vertices[v_num], _vertices_textures[vt_num], _vertices_normals[vn_num]);
 	}
 }
 
@@ -327,9 +364,9 @@ void Parser::parse( std::string file )
 		} else if (!line.compare(0, 2, "v ")) {
 			push_vertex(parse_vertex(line, 2, false));
 		} else if (!line.compare(0, 3, "vt ")) {
-			_vertices_textures.push_back(parse_vertex(line, 3, true));
+			push_vertextn(parse_vertex(line, 3, true), 0);
 		} else if (!line.compare(0, 3, "vn ")) {
-			_vertices_normals.push_back(parse_vertex(line, 3, false));
+			push_vertextn(parse_vertex(line, 3, false), 1);
 		} else if (!line.compare(0, 2, "f ")) {
 			push_face(line); //, distribution(generator)); //generate random int from [50:200]
 		} else if (!line.compare(0, 7, "usemtl ")) {
@@ -397,14 +434,19 @@ void Parser::center_object( void )
 
 	float normalizer = 0.5f / get_extremum();
 
-	std::vector<t_vertex>::iterator it = _vertices.begin();
-	std::vector<t_vertex>::iterator ite = _vertices.end();
+	std::vector<t_vertex *>::iterator it = _vertices.begin();
+	std::vector<t_vertex *>::iterator ite = _vertices.end();
 
 	for (; it != ite; it++) {
-		set_vertex(*it, (it->x - central_axis.x) * normalizer,
-						(it->y - central_axis.y) * normalizer,
-						(it->z - central_axis.z) * normalizer);
+		set_vertex(**it, ((*it)->x - central_axis.x) * normalizer,
+						((*it)->y - central_axis.y) * normalizer,
+						((*it)->z - central_axis.z) * normalizer);
 	}
+
+	GLfloat test[121];
+	size_t index = 0;
+	_faces[0]->fill_vertex_array(test, index);
+	std::cout << "filled vertex array, go to " << index << std::endl;
 }
 
 void Parser::display_content( void )
@@ -459,7 +501,7 @@ void Parser::fill_vertex_array(GLfloat *vertices)
 	std::vector<Face *>::iterator ite = _faces.end();
 
 	for (; it != ite; it++) {
-		(*it)->fill_vertex_array(vertices, index, _face_mode, _vertices, _vertices_textures, _vertices_normals);
+		(*it)->fill_vertex_array(vertices, index);
 	}
 
 	// std::cout << "vertices filled up to index " << index << std::endl;

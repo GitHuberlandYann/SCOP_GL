@@ -25,11 +25,10 @@ class Parser
 	private:
 		std::string _root;
 		t_face_mode _face_mode;
-		t_vertex _max_box;
-		t_vertex _min_box;
-		std::vector<t_vertex> _vertices;
-		std::vector<t_vertex> _vertices_textures;
-		std::vector<t_vertex> _vertices_normals;
+		t_vertex _max_box, _min_box, _null_vertex;
+		std::vector<t_vertex *> _vertices;
+		std::vector<t_vertex *> _vertices_textures;
+		std::vector<t_vertex *> _vertices_normals;
 		std::vector<Face *> _faces;
 		std::vector<Material *> _materials;
 		std::vector<t_tex *> _textures;
@@ -38,6 +37,7 @@ class Parser
 		unsigned int _number_vertices;
 
 		void push_vertex( t_vertex vertex );
+		void push_vertextn( t_vertex vertex, bool norm );
 		int check_vindex( int num );
 		int check_vtindex( int num );
 		int check_vnindex( int num );
