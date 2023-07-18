@@ -92,20 +92,25 @@ std::string OpenGL_Manager::create_fragment_shader( std::string data )
 
 	res += data.substr(tex_index + 3, out_index - (tex_index + 3));
 	if (_nb_textures) {
-		res += "if (Tex_index[0] == 0 || Tex_index[1] == -1) {\r\n\t\toutColor = vec4(Color, 1.0);\r\n\t}";
+		res += "if (UseTex == 0 || Tex_index == -1) {\r\n\t\toutColor = vec4(Color, 1.0);\r\n\t}";
 		for (int index = 0; index < _nb_textures; index++) {
 			std::string num = std::to_string(index);
-			res += " else if (Tex_index[1] == " + num + ") {\r\n\t\toutColor = texture(tex" + num + ", Texcoord);\r\n\t}";
+			res += " else if (Tex_index == " + num + ") {\r\n\t\toutColor = texture(tex" + num + ", Texcoord);\r\n\t}";
 		}
-		res += "\r\n";
+		res += " else { // not supposed to happen\r\n\t\toutColor = vec4(0.0, 1.0, 0.0, 1.0);\r\n\t}";
 	} else {
 		res += "outColor = vec4(Color, 1.0);";
 	}
 
-	res += "\r\n\tif (Tex_index[2] == 1) {\r\n\t\toutColor = vec4(1.0, 1.0, 1.0, 2.0) - outColor;\r\n\t}";
 	res += data.substr(out_index + 3);
 	// display_special_characters(res);
 	// std::cout << res;
+	std::ofstream savefile("Sources/Shaders/last_fragment.glsl");
+	if (!savefile.is_open()) {
+		std::cerr << "failed to open save file for fragment shader" << std::endl;
+		return (res);
+	}
+	savefile << res;
 	return (res);
 }
 
@@ -254,7 +259,7 @@ void OpenGL_Manager::load_textures( Parser *parser )
 
 	std::vector<t_tex *> ui_textures = parser->get_textures();
 
-	_textures = new GLuint[_nb_textures]; // malloc todo
+	_textures = new GLuint[_nb_textures];
 	glGenTextures(_nb_textures, _textures);
 	
 	for (GLint index = 0; index < _nb_textures; index++)

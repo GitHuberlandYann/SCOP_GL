@@ -1,6 +1,7 @@
-# Executables
+# Mine
 scop
 yfile
+Sources/Shaders/last_fragment.glsl
 
 # Prerequisites
 *.d

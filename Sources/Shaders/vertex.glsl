@@ -15,20 +15,26 @@ uniform mat4 scale;
 
 out vec3 Color;
 out vec2 Texcoord;
-out vec3 Tex_index;
+flat out int UseTex;
+flat out int Tex_index;
+flat out int Invert;
 
 void main()
 {
-	Tex_index = vec3(0.0, 0.0, invert_color);
+	UseTex = 0;
+	Tex_index = tex_index;
+	Invert = invert_color;
 	if (color_mode == 0) {
 		Color = vec3(1.0, 1.0, 1.0);
 	} else if (color_mode == 1) {
 		Color = color;
 	} else if (color_mode == 2) {
 		Color = vec3(1.0, 0.0, 0.0);
-		Tex_index = vec3(1.0, tex_index, invert_color);
+		UseTex = 1;
 	} else if (color_mode == 3) {
 		Color = vec3((position.x + 0.5) / 2, (position.y + 0.5) / 2, (position.z + 0.5) / 2);
+	} else { // not supposed to happen
+		Color = vec3(0.0, 0.0, 1.0);
 	}
 
 	Texcoord = texcoord;
