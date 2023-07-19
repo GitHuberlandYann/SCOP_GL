@@ -442,11 +442,6 @@ void Parser::center_object( void )
 						((*it)->y - central_axis.y) * normalizer,
 						((*it)->z - central_axis.z) * normalizer);
 	}
-
-	GLfloat test[121];
-	size_t index = 0;
-	_faces[0]->fill_vertex_array(test, index);
-	std::cout << "filled vertex array, go to " << index << std::endl;
 }
 
 void Parser::display_content( void )

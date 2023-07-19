@@ -8,6 +8,8 @@ OpenGL_Manager::OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, si
 	std::cout << "Constructor of OpenGL_Manager called" << std::endl << std::endl;
 	set_vertex(_rotation, 0.0f, 0.0f, 180.0f);
 	set_vertex(_background_color, 0.5f, 0.5f, 0.5f);
+	_cam_pos = glm::vec3(2.5f, 2.5f, 2.0f);
+	_cam_angles = glm::vec2(225.0f, -37.0f);
 
 	for (size_t index = 0; index < _vtp_size; index++) {
 		size_t tex_index = *vert_tex_pair[index].second;
@@ -226,18 +228,22 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	model = glm::rotate(model, glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 	glUniformMatrix4fv(_uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
+	std::cout << "looking at " << _cam_pos.x + glm::cos(glm::radians(_cam_angles.x)) << ", " << _cam_pos.y + glm::cos(glm::radians(_cam_angles.x)) << ", " << _cam_pos.z + glm::sin(glm::radians(_cam_angles.y)) << std::endl;
+	glm::vec3 cam_director = glm::vec3(glm::cos(glm::radians(_cam_angles.x)),
+										glm::sin(glm::radians(_cam_angles.x)),
+										glm::sin(glm::radians(_cam_angles.y)));
 	glm::mat4 view = glm::lookAt( // simulates a moving camera
-		glm::vec3(2.5f, 2.5f, 2.0f), // world position of camera
-		glm::vec3(0.0f, 0.0f, 0.0f), // point to be centered on screen
+		_cam_pos, // world position of camera
+		_cam_pos + cam_director, // point to be centered on screen
 		glm::vec3(0.0f, 0.0f, 1.0f) // 'up' axis, here up is z axis, meaning x y is the ground
 	);
-	GLint uniView = glGetUniformLocation(_shaderProgram, "view");
-	glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
+	_uniView = glGetUniformLocation(_shaderProgram, "view");
+	glUniformMatrix4fv(_uniView, 1, GL_FALSE, glm::value_ptr(view));
 
 	glm::mat4 proj = glm::perspective( // perspective projection matrix
 		glm::radians(45.0f),                          // vertical fov
 		(GLfloat)WIN_WIDTH / (GLfloat)WIN_HEIGHT,     // aspect ratio of the screen
-		1.0f,                                         // 'near' plane == clipping planes
+		0.1f,                                         // 'near' plane == clipping planes (default was 1.0f)
 		10.0f                                         // 'far' plane
 	);
 	GLint uniProj = glGetUniformLocation(_shaderProgram, "proj");

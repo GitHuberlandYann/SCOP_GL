@@ -98,6 +98,48 @@ void OpenGL_Manager::user_inputs( void )
 		glUniform1i(_uniInvert, _invert_col);
 	} else if (glfwGetKey(_window, GLFW_KEY_I) == GLFW_RELEASE)
 		_key_invert = 0;
+	
+	/* camera work */
+	GLint key_cam_v = (glfwGetKey(_window, GLFW_KEY_UP) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_DOWN) == GLFW_PRESS);
+	if (key_cam_v) {
+		_cam_angles.y += key_cam_v;
+		if (_cam_angles.y < -180.0f)
+			_cam_angles.y = 179.0f;
+		else if (_cam_angles.y > 180.0f)
+			_cam_angles.y = -179.0f;
+		// std::cout << "current angle y cam: " << _cam_angles.y << std::endl;
+	}
+	GLint key_cam_h = (glfwGetKey(_window, GLFW_KEY_LEFT) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_RIGHT) == GLFW_PRESS);
+	if (key_cam_h) {
+		_cam_angles.x += key_cam_h;
+		if (_cam_angles.x < 0.0f)
+			_cam_angles.x = 359.0f;
+		else if (_cam_angles.x > 360.0f)
+			_cam_angles.x = 1.0f;
+	}
+	GLint key_cam_z = (glfwGetKey(_window, GLFW_KEY_KP_1) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_0) == GLFW_PRESS);
+	if (key_cam_z) {
+		_cam_pos.z += key_cam_z * 0.05f;
+	}
+	GLint key_cam_move = (glfwGetKey(_window, GLFW_KEY_KP_3) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_2) == GLFW_PRESS);
+	if (key_cam_move) {
+		glm::vec3 cam_director = glm::vec3(glm::cos(glm::radians(_cam_angles.x)) * 0.01f,
+											glm::sin(glm::radians(_cam_angles.x)) * 0.01f,
+											glm::sin(glm::radians(_cam_angles.y)) * 0.01f);
+		if (key_cam_move == 1)
+			_cam_pos += cam_director;
+		else
+			_cam_pos -= cam_director;
+	}
+
+	if (key_cam_v || key_cam_h || key_cam_z || key_cam_move)
+	{
+		glm::vec3 cam_director = glm::vec3(glm::cos(glm::radians(_cam_angles.x)),
+											glm::sin(glm::radians(_cam_angles.x)),
+											glm::sin(glm::radians(_cam_angles.y)));
+		glm::mat4 view = glm::lookAt(_cam_pos, _cam_pos + cam_director, glm::vec3(0.0f, 0.0f, 1.0f));
+		glUniformMatrix4fv(_uniView, 1, GL_FALSE, glm::value_ptr(view));
+	}
 }
 
 // void cursor_position_callback( GLFWwindow* window, double xpos, double ypos )
