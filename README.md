@@ -9,16 +9,20 @@ WSADER      - rotate object around
 +- (PAD)    - change movement speed
 +-          - resize object
 
-C           - switch color mode (DEFAULT-MATERIAL-TEXTURE-GRADIENT)
-B           - enable/disable GL_DEPTH_TEST
-F           - fill/unfill faces with color
+C           - switch color mode (DEFAULT-MATERIAL*-TEXTURE*-GRADIENT)
 I           - invert colors
+F           - switch drawing mode (FILL-LINES-POINTS)
+[]          - change point size in POINTS drawing mode
+
+B           - enable/disable GL_DEPTH_TEST
 NM          - next/previous section of object is displayed
 
 74 (PAD)    - change R channel of background color
 85 (PAD)    - change G channel of background color
 96 (PAD)    - change B channel of background color
 ```
+
+\* color mode possible only if .obj uses .mlt file
 
 ## Run
 After cloning the project, cd into repo and run:

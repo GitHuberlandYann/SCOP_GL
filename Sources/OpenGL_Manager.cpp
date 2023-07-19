@@ -1,9 +1,9 @@
 # include "scop.h"
 
 OpenGL_Manager::OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, size_t *> > vert_tex_pair )
-	: _window(NULL), _nb_textures(nb_textures), _textures(NULL), _rotation_speed(1.5f), _zoom(1.0f),
-		_key_fill(0), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _key_section(0),
-		_invert_col(0), _key_invert(0), _fill(GL_TRUE), _vtp_size(vert_tex_pair.size())
+	: _window(NULL), _nb_textures(nb_textures), _textures(NULL), _rotation_speed(1.5f), _zoom(1.0f), _point_size(1.0f),
+		_key_fill(0), _fill(FILL), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _key_section(0),
+		_invert_col(0), _key_invert(0), _mouse_x(0), _mouse_y(0), _vtp_size(vert_tex_pair.size())
 {
 	std::cout << "Constructor of OpenGL_Manager called" << std::endl << std::endl;
 	set_vertex(_rotation, 0.0f, 0.0f, 180.0f);
@@ -118,7 +118,7 @@ std::string OpenGL_Manager::create_fragment_shader( std::string data )
 //                                Public                                      //
 // ************************************************************************** //
 
-void OpenGL_Manager::setup_window( void )
+void OpenGL_Manager::setup_window( std::string title )
 {
 	glfwInit();
 
@@ -129,7 +129,7 @@ void OpenGL_Manager::setup_window( void )
 
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	_window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "OpenGL", nullptr, nullptr);
+	_window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, title.c_str(), nullptr, nullptr);
 
 	// activate opengl context
 	glfwMakeContextCurrent(_window);
@@ -292,7 +292,10 @@ void OpenGL_Manager::main_loop( void )
 	std::cout << "number of vertices: " << _number_vertices << std::endl << std::endl;
 	
 	glClearColor(_background_color.x, _background_color.y, _background_color.z, 1.0f);
-	// glPointSize(10.0f);
+	// glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	// if (glfwRawMouseMotionSupported())
+	// 	glfwSetInputMode(_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+	// glfwSetCursorPosCallback(_window, cursor_position_callback);
 
 	// std::cout << "60fps game is 16.6666 ms/frame; 30fps game is 33.3333 ms/frame." << std::endl; 
 	// double lastTime = glfwGetTime();

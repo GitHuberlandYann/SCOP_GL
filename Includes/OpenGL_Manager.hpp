@@ -24,7 +24,15 @@ enum {
 	TEXATTRIB
 };
 
+enum {
+	FILL,
+	LINE,
+	POINT,
+	F_LAST
+};
+
 class Parser;
+// void cursor_position_callback( GLFWwindow* window, double xpos, double ypos );
 
 class OpenGL_Manager
 {
@@ -35,9 +43,9 @@ class OpenGL_Manager
 		GLint _uniColorMode, _uniTexIndex, _uniInvert, _uniModel, _uniScale, _nb_textures, _number_vertices, _section;
 		GLuint *_textures;
 		t_vertex _rotation, _background_color;
-		GLfloat _rotation_speed, _zoom;
-		GLint _key_fill, _key_depth, _color_mode, _key_color_mode, _key_section, _invert_col, _key_invert;
-		GLboolean _fill;
+		GLfloat _rotation_speed, _zoom, _point_size;
+		GLint _key_fill, _fill, _key_depth, _color_mode, _key_color_mode, _key_section, _invert_col, _key_invert;
+		GLdouble _mouse_x, _mouse_y;
 		std::vector<std::pair<int, int> > _vert_tex_pair;
 		size_t _vtp_size;
 
@@ -50,7 +58,7 @@ class OpenGL_Manager
 		OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, size_t *> > vert_tex_pair );
 		~OpenGL_Manager( void );
 
-		void setup_window( void );
+		void setup_window( std::string title );
 		void setup_array_buffer( Parser *parser );
 		void create_shaders( void );
 		void setup_communication_shaders( void );

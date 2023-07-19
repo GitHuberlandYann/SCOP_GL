@@ -43,14 +43,29 @@ void OpenGL_Manager::user_inputs( void )
 		_key_depth = 0;
 
 	if (glfwGetKey(_window, GLFW_KEY_F) == GLFW_PRESS && ++_key_fill == 1) {
-		if (_fill)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //GL_POINT
-		else
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		_fill = !_fill;
+		++_fill;
+		if (_fill == F_LAST)
+			_fill = FILL;
+		switch (_fill) {
+			case FILL:
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				break;
+			case LINE:
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				break;
+			case POINT:
+				glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+				break;
+		}
 	} else if (glfwGetKey(_window, GLFW_KEY_F) == GLFW_RELEASE)
 		_key_fill = 0;
 	
+	GLint key_point_size = (glfwGetKey(_window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS);
+	if (key_point_size && _point_size + 0.1f * key_point_size >= 1.0f && _point_size + 0.1f * key_point_size < 10.0f) {
+		_point_size += 0.1f * key_point_size;
+		glPointSize(_point_size);
+	}
+
 	GLint key_zoom = (glfwGetKey(_window, GLFW_KEY_EQUAL) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_MINUS) == GLFW_PRESS);
 	if (key_zoom && _zoom + 0.1f * key_zoom >= 0) {
 		_zoom += 0.1f * key_zoom;
@@ -84,3 +99,9 @@ void OpenGL_Manager::user_inputs( void )
 	} else if (glfwGetKey(_window, GLFW_KEY_I) == GLFW_RELEASE)
 		_key_invert = 0;
 }
+
+// void cursor_position_callback( GLFWwindow* window, double xpos, double ypos )
+// {
+// 	(void)window;
+// 	std::cout << "current mouse position: [" << xpos << ", " << ypos << ']' << std::endl;
+// }
