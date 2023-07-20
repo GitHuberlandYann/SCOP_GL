@@ -1,7 +1,7 @@
 # include "scop.h"
 
-OpenGL_Manager::OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, size_t *> > vert_tex_pair )
-	: _window(NULL), _nb_textures(nb_textures), _textures(NULL), _rotation_speed(1.5f), _zoom(1.0f), _point_size(1.0f),
+OpenGL_Manager::OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, size_t *> > vert_tex_pair, bool provided )
+	: _window(NULL), _nb_textures(nb_textures + provided), _omore_tex(provided), _textures(NULL), _rotation_speed(1.5f), _zoom(1.0f), _point_size(1.0f),
 		_key_fill(0), _fill(FILL), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _key_section(0),
 		_invert_col(0), _key_invert(0), _mouse_x(0), _mouse_y(0), _vtp_size(vert_tex_pair.size())
 {
@@ -220,6 +220,9 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	_uniTexIndex = glGetUniformLocation(_shaderProgram, "tex_index");
 	glUniform1i(_uniTexIndex, -1);
 
+	GLint uniLastTex = glGetUniformLocation(_shaderProgram, "last_tex");
+	glUniform1i(uniLastTex, _nb_textures - 1 + !_nb_textures);
+
 	_uniInvert = glGetUniformLocation(_shaderProgram, "invert_color");
 	glUniform1i(_uniInvert, _invert_col);
 
@@ -252,11 +255,11 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	_uniScale = glGetUniformLocation(_shaderProgram, "scale");
 	glm::mat4 scale =  glm::scale(glm::mat4(1.0f), glm::vec3(_zoom));
 	glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
-	
+
 	check_glstate("Communication with shader program successfully established");
 }
 
-void OpenGL_Manager::load_textures( Parser *parser )
+void OpenGL_Manager::load_textures( Parser *parser, t_tex *provided_tex )
 {
 	if (!_nb_textures) {
 		std::cout << "no texture to load on shader" << std::endl;
@@ -264,6 +267,9 @@ void OpenGL_Manager::load_textures( Parser *parser )
 	}
 
 	std::vector<t_tex *> ui_textures = parser->get_textures();
+	if (provided_tex) {
+		ui_textures.push_back(provided_tex);
+	}
 
 	_textures = new GLuint[_nb_textures];
 	glGenTextures(_nb_textures, _textures);
@@ -287,7 +293,7 @@ void OpenGL_Manager::load_textures( Parser *parser )
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 
-	std::string success_msg = "Succesfully loaded " + std::to_string(_nb_textures) + " to shader";
+	std::string success_msg = "Succesfully loaded " + std::to_string(_nb_textures) + " textures to shader";
 	check_glstate(success_msg);
 }
 

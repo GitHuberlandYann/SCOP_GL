@@ -13,6 +13,7 @@ enum {
 	DEFAULT,
 	MATERIAL,
 	TEXTURE,
+	PROVIDED,
 	// GRAY,
 	GRADIENT,
 	LAST
@@ -41,6 +42,7 @@ class OpenGL_Manager
 		GLuint _vao, _vbo; // vertex array objects, vertex buffer objects
 		GLuint _shaderProgram, _vertexShader, _fragmentShader;
 		GLint _uniColorMode, _uniTexIndex, _uniInvert, _uniModel, _uniView, _uniScale, _nb_textures, _number_vertices, _section;
+		bool _omore_tex;
 		GLuint *_textures;
 		t_vertex _rotation, _background_color;
 		glm::vec3 _cam_pos;
@@ -57,14 +59,14 @@ class OpenGL_Manager
 		void user_inputs( void );
 
 	public:
-		OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, size_t *> > vert_tex_pair );
+		OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, size_t *> > vert_tex_pair, bool provided );
 		~OpenGL_Manager( void );
 
 		void setup_window( std::string title );
 		void setup_array_buffer( Parser *parser );
 		void create_shaders( void );
 		void setup_communication_shaders( void );
-		void load_textures( Parser *parser );
+		void load_textures( Parser *parser, t_tex *provided_tex );
 		void main_loop( void );
 };
 

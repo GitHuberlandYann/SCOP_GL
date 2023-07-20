@@ -406,9 +406,8 @@ void Parser::load_textures( void )
 		if (!new_tex->texture) {
 			std::cerr << "failed to load image " << tex_file << " because:" << std::endl << SOIL_last_result() << std::endl;
 			throw SOILFailureException();
-		} else {
-			std::cout << tex_file << " loaded successfully" << std::endl;
 		}
+		std::cout << tex_file << " loaded successfully" << std::endl;
 		(*it)->set_texture_index(cnt);
 		++cnt;
 	}

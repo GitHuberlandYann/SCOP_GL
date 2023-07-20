@@ -26,7 +26,9 @@ void OpenGL_Manager::user_inputs( void )
 		++_color_mode;
 		if (_color_mode == MATERIAL && !_vtp_size)
 			++_color_mode;
-		if (_color_mode == TEXTURE && !_nb_textures)
+		if (_color_mode == TEXTURE && (!_nb_textures || _nb_textures == _omore_tex))
+			++_color_mode;
+		if (_color_mode == PROVIDED && !_omore_tex)
 			++_color_mode;
 		if (_color_mode == LAST)
 			_color_mode = DEFAULT;

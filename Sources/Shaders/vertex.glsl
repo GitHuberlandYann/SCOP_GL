@@ -6,6 +6,7 @@ in vec2 texcoord;
 
 uniform int color_mode;
 uniform int tex_index;
+uniform int last_tex;
 uniform int invert_color;
 
 uniform mat4 model;
@@ -21,6 +22,7 @@ flat out int Invert;
 
 void main()
 {
+	Texcoord = texcoord;
 	UseTex = 0;
 	Tex_index = tex_index;
 	Invert = invert_color;
@@ -29,14 +31,16 @@ void main()
 	} else if (color_mode == 1) {
 		Color = color;
 	} else if (color_mode == 2) {
-		Color = vec3(1.0, 0.0, 0.0);
 		UseTex = 1;
 	} else if (color_mode == 3) {
+		Texcoord = vec2(position.x + 0.5 + position.z / 10.0, position.y + 0.5 + position.z / 10.0);
+		UseTex = 1;
+		Tex_index = last_tex;
+	} else if (color_mode == 4) {
 		Color = vec3((position.x + 0.5) / 2, (position.y + 0.5) / 2, (position.z + 0.5) / 2);
 	} else { // not supposed to happen
 		Color = vec3(0.0, 0.0, 1.0);
 	}
 
-	Texcoord = texcoord;
 	gl_Position = proj * view * model * scale * vec4(position, 1.0);
 }
