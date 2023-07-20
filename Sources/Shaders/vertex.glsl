@@ -55,7 +55,7 @@ void main()
 	LightPos = lightPos;
 	LightColor = lightColor;
 	FragPos = vec3(model * vec4(position, 1.0));
-	Normal = mat3(transpose(inverse(model))) * normal;
+	Normal = vec3(model * vec4(normal, 1.0));
 	UseLight = use_light;
 
 	UseTex = 0;

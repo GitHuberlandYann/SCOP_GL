@@ -123,7 +123,7 @@ void OpenGL_Manager::user_inputs( void )
 	}
 	GLint key_cam_h = (glfwGetKey(_window, GLFW_KEY_LEFT) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_RIGHT) == GLFW_PRESS);
 	if (key_cam_h) {
-		_cam_angles.x += key_cam_h;
+		_cam_angles.x += key_cam_h * (_rotation_speed - 0.5f);
 		if (_cam_angles.x < 0.0f)
 			_cam_angles.x = 359.0f;
 		else if (_cam_angles.x > 360.0f)
@@ -131,17 +131,17 @@ void OpenGL_Manager::user_inputs( void )
 	}
 	GLint key_cam_z = (glfwGetKey(_window, GLFW_KEY_KP_1) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_0) == GLFW_PRESS);
 	if (key_cam_z) {
-		_cam_pos.z += key_cam_z * 0.05f;
+		_cam_pos.z += key_cam_z * 0.05f * (_rotation_speed - 0.5f);
 	}
 	GLint key_cam_move = (glfwGetKey(_window, GLFW_KEY_KP_3) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_2) == GLFW_PRESS);
 	if (key_cam_move) {
-		glm::vec3 cam_director = glm::vec3(glm::cos(glm::radians(_cam_angles.x)) * 0.01f,
-											glm::sin(glm::radians(_cam_angles.x)) * 0.01f,
-											glm::sin(glm::radians(_cam_angles.y)) * 0.01f);
+		glm::vec3 cam_director = glm::vec3(glm::cos(glm::radians(_cam_angles.x)),
+											glm::sin(glm::radians(_cam_angles.x)),
+											glm::sin(glm::radians(_cam_angles.y)));
 		if (key_cam_move == 1)
-			_cam_pos += cam_director;
+			_cam_pos += 0.01f * (_rotation_speed - 0.5f) * cam_director;
 		else
-			_cam_pos -= cam_director;
+			_cam_pos -= 0.01f * (_rotation_speed - 0.5f) * cam_director;
 	}
 
 	if (key_cam_v || key_cam_h || key_cam_z || key_cam_move)
