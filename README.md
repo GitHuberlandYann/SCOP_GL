@@ -9,8 +9,9 @@ WSADER      - rotate object around
 +- (PAD)    - change movement speed
 +-          - resize object
 
-C           - switch color mode (DEFAULT-MATERIAL*-TEXTURE*-GRADIENT)
+C           - switch color mode (DEFAULT-MATERIAL*-TEXTURE*-PROVIDED-GRAY-GRADIENT)
 I           - invert colors
+L			- enable/disable lightning
 F           - switch drawing mode (FILL-LINES-POINTS)
 []          - change point size in POINTS drawing mode
 

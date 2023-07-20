@@ -1,9 +1,10 @@
 # include "scop.h"
 
 OpenGL_Manager::OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, size_t *> > vert_tex_pair, bool provided )
-	: _window(NULL), _nb_textures(nb_textures + provided), _omore_tex(provided), _textures(NULL), _rotation_speed(1.5f), _zoom(1.0f), _point_size(1.0f),
-		_key_fill(0), _fill(FILL), _key_depth(0), _color_mode(DEFAULT), _key_color_mode(0), _key_section(0),
-		_invert_col(0), _key_invert(0), _mouse_x(0), _mouse_y(0), _vtp_size(vert_tex_pair.size())
+	: _window(NULL), _nb_textures(nb_textures + provided), _omore_tex(provided), _textures(NULL),
+		_rotation_speed(1.5f), _zoom(1.0f), _point_size(1.0f), _key_fill(0), _fill(FILL), _key_depth(0),
+		_color_mode(DEFAULT), _key_color_mode(0), _key_section(0), _invert_col(0), _key_invert(0),
+		_use_light(0), _key_use_light(0), _mouse_x(0), _mouse_y(0), _vtp_size(vert_tex_pair.size())
 {
 	std::cout << "Constructor of OpenGL_Manager called" << std::endl << std::endl;
 	set_vertex(_rotation, 0.0f, 0.0f, 180.0f);
@@ -147,18 +148,21 @@ void OpenGL_Manager::setup_window( std::string title )
 
 void OpenGL_Manager::setup_array_buffer( Parser *parser )
 {
+	t_face_mode fm = parser->get_face_mode();
+	_can_light = (fm == VTN) || (fm == ONLY_VN);
+
 	glGenVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
 
 	_number_vertices = parser->get_number_vertices();
 
-	GLfloat *vertices = new GLfloat[_number_vertices * 11]; // X Y Z, R G B, U V, nX nY nZ
-	std::cout << "total alloc of vertices: " << _number_vertices * 11 << std::endl;
+	GLfloat *vertices = new GLfloat[_number_vertices * 12]; // X Y Z, R G B, U V, nX nY nZ
+	std::cout << "total alloc of vertices: " << _number_vertices * 12 << std::endl;
 	parser->fill_vertex_array(vertices);
 
 	glGenBuffers(1, &_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-	glBufferData(GL_ARRAY_BUFFER, _number_vertices * 11 * sizeof(float), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, _number_vertices * 12 * sizeof(float), vertices, GL_STATIC_DRAW);
 
 	delete [] vertices;
 	check_glstate("Vertex buffer successfully created");
@@ -188,9 +192,11 @@ void OpenGL_Manager::create_shaders( void )
 
 	glBindFragDataLocation(_shaderProgram, 0, "outColor");
 
+	glBindAttribLocation(_shaderProgram, NUMATTRIB, "face_num");
 	glBindAttribLocation(_shaderProgram, POSATTRIB, "position");
 	glBindAttribLocation(_shaderProgram, COLATTRIB, "color");
 	glBindAttribLocation(_shaderProgram, TEXATTRIB, "texcoord");
+	glBindAttribLocation(_shaderProgram, NORMATTRIB, "normal");
 
 	glLinkProgram(_shaderProgram);
 	glUseProgram(_shaderProgram);
@@ -201,17 +207,25 @@ void OpenGL_Manager::create_shaders( void )
 void OpenGL_Manager::setup_communication_shaders( void )
 {
 	// attributes
+	glEnableVertexAttribArray(NUMATTRIB);
+	glVertexAttribPointer(NUMATTRIB, 1, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), 0);
+	check_glstate("numAttrib successfully set");
+
 	glEnableVertexAttribArray(POSATTRIB);
-	glVertexAttribPointer(POSATTRIB, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), 0);
+	glVertexAttribPointer(POSATTRIB, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), (void *)(sizeof(GLfloat)));
 	check_glstate("posAttrib successfully set");
 
 	glEnableVertexAttribArray(COLATTRIB);
-	glVertexAttribPointer(COLATTRIB, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
+	glVertexAttribPointer(COLATTRIB, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), (void *)(4 * sizeof(GLfloat)));
 	check_glstate("colAttrib successfully set");
 
 	glEnableVertexAttribArray(TEXATTRIB);
-	glVertexAttribPointer(TEXATTRIB, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
+	glVertexAttribPointer(TEXATTRIB, 2, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), (void *)(7 * sizeof(GLfloat)));
 	check_glstate("texAttrib successfully set");
+
+	glEnableVertexAttribArray(NORMATTRIB);
+	glVertexAttribPointer(NORMATTRIB, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), (void *)(9 * sizeof(GLfloat)));
+	check_glstate("normAttrib successfully set");
 
 	// uniforms
 	_uniColorMode = glGetUniformLocation(_shaderProgram, "color_mode");
@@ -225,6 +239,9 @@ void OpenGL_Manager::setup_communication_shaders( void )
 
 	_uniInvert = glGetUniformLocation(_shaderProgram, "invert_color");
 	glUniform1i(_uniInvert, _invert_col);
+
+	_uniUseLight = glGetUniformLocation(_shaderProgram, "use_light");
+	glUniform1i(_uniUseLight, 0);
 
 	_uniModel = glGetUniformLocation(_shaderProgram, "model");
 	glm::mat4 model = glm::mat4(1.0f);
@@ -255,6 +272,14 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	_uniScale = glGetUniformLocation(_shaderProgram, "scale");
 	glm::mat4 scale =  glm::scale(glm::mat4(1.0f), glm::vec3(_zoom));
 	glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
+
+	glm::vec3 light_pos = glm::vec3(10.0f, 1.0f, 3.0f);
+	GLint uniLightPos = glGetUniformLocation(_shaderProgram, "lightPos");
+	glUniform3fv(uniLightPos, 1, glm::value_ptr(light_pos));
+
+	glm::vec3 light_color = glm::vec3(1.0f, 1.0f, 1.0f);
+	GLint uniLightColor = glGetUniformLocation(_shaderProgram, "lightColor");
+	glUniform3fv(uniLightColor, 1, glm::value_ptr(light_color));
 
 	check_glstate("Communication with shader program successfully established");
 }

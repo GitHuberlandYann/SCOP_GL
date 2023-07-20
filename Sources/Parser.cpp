@@ -487,6 +487,11 @@ std::vector<std::pair<int, size_t *> > Parser::get_nbvert_index_textures( void )
 	return (_nbvert_index_textures);
 }
 
+t_face_mode Parser::get_face_mode( void )
+{
+	return (_face_mode);
+}
+
 void Parser::fill_vertex_array(GLfloat *vertices)
 {
 	size_t index = 0;

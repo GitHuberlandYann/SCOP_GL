@@ -32,18 +32,20 @@ void Face::add_vertex_array( GLfloat *vertices, size_t & index, t_vertex *vert, 
 	// 	std::cout << "\tvert_tex " << vert_tex.x << ", " << vert_tex.y << std::endl;
 	// 	std::cout << "\tvert_nor " << vert_nor.x << ", " << vert_nor.y << ", " << vert_nor.z << std::endl;
 	// }
-	vertices[index] = vert->x;
-	vertices[index + 1] = vert->y;
-	vertices[index + 2] = vert->z;
-	vertices[index + 3] = _color.x;
-	vertices[index + 4] = _color.y;
-	vertices[index + 5] = _color.z;
-	vertices[index + 6] = vert_tex->x;
-	vertices[index + 7] = vert_tex->y;
-	vertices[index + 8] = vert_nor->x;
-	vertices[index + 9] = vert_nor->y;
-	vertices[index + 10] = vert_nor->z;
-	index += 11;
+	// std::cout << "at index " << index << ", num vertex: " << (index / 36) % 3 << std::endl;
+	vertices[index] = (index / 36) % 3;
+	vertices[index + 1] = vert->x;
+	vertices[index + 2] = vert->y;
+	vertices[index + 3] = vert->z;
+	vertices[index + 4] = _color.x;
+	vertices[index + 5] = _color.y;
+	vertices[index + 6] = _color.z;
+	vertices[index + 7] = vert_tex->x;
+	vertices[index + 8] = vert_tex->y;
+	vertices[index + 9] = vert_nor->x;
+	vertices[index + 10] = vert_nor->y;
+	vertices[index + 11] = vert_nor->z;
+	index += 12;
 }
 
 // ************************************************************************** //

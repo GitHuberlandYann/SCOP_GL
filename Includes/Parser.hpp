@@ -61,6 +61,7 @@ class Parser
 		int get_number_textures( void );
 		std::vector<t_tex *> get_textures( void );
 		std::vector<std::pair<int, size_t *> > get_nbvert_index_textures( void );
+		t_face_mode get_face_mode( void );
 		void fill_vertex_array(GLfloat *vertices);
 };
 

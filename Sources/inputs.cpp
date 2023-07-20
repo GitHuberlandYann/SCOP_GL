@@ -96,10 +96,20 @@ void OpenGL_Manager::user_inputs( void )
 		_key_section = 0;
 	
 	if (glfwGetKey(_window, GLFW_KEY_I) == GLFW_PRESS && ++_key_invert == 1) {
-		_invert_col = !_invert_col;
+		++_invert_col;
+		if (_invert_col == 3)
+			_invert_col = 0;
 		glUniform1i(_uniInvert, _invert_col);
 	} else if (glfwGetKey(_window, GLFW_KEY_I) == GLFW_RELEASE)
 		_key_invert = 0;
+	
+	if (glfwGetKey(_window, GLFW_KEY_L) == GLFW_PRESS && ++_key_use_light == 1) {
+		if (_can_light) {
+			_use_light = !_use_light;
+			glUniform1i(_uniUseLight, _use_light);
+		}
+	} else if (glfwGetKey(_window, GLFW_KEY_L) == GLFW_RELEASE)
+		_key_use_light = 0;
 	
 	/* camera work */
 	GLint key_cam_v = (glfwGetKey(_window, GLFW_KEY_UP) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_DOWN) == GLFW_PRESS);
