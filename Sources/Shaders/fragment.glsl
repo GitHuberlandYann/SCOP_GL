@@ -34,7 +34,7 @@ void main()
 		float diff = max(dot(norm, lightDir), 0.0);
 		vec3 diffuse = diff * LightColor;
 
-		vec3 tmpColor = (ambient + diffuse) * vec3(outColor.x, outColor.y, outColor.z);
+		vec3 tmpColor = (ambient + diffuse) * vec3(outColor);
 		outColor = vec4(tmpColor, 1.0);
 	}
 }
