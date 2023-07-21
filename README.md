@@ -5,31 +5,29 @@ Project done during my formation at [19](https://campus19.be/).
 
 ## Controls (Qwerty)
 ```
-WSADER          - rotate object around
-+- (PAD)        - change movement speed
-+-              - resize object
+WSADER           - rotate object around
++- (PAD)         - change movement speed
++-               - resize object
 
-C               - switch color mode (DEFAULT-MATERIAL*-TEXTURE*-PROVIDED**-GRAY-GRADIENT)
-I               - invert colors
-L			    - enable/disable lightning***
-F               - switch drawing mode (FILL-LINES-POINTS)
-[]              - change point size in POINTS drawing mode
+C                - switch color mode (DEFAULT-MATERIAL*-TEXTURE*-PROVIDED**-GRAY-GRADIENT)
+I                - invert colors
+L			     - enable/disable lightning***
+F                - switch drawing mode (FILL-LINES-POINTS)
+[]               - change point size in POINTS drawing mode
 
-B               - enable/disable GL_DEPTH_TEST
-NM              - next/previous section of object is displayed
+B                - enable/disable GL_DEPTH_TEST
+NM               - next/previous section of object is displayed
 
-← → ↑ ↓         - rotate camera
-01 (PAD)        - change z coordinate of camera
-23 (PAD)        - translate camera
+← → ↑ ↓ 01 (PAD) - translate camera
 
-74 (PAD)        - change R channel of background color
-85 (PAD)        - change G channel of background color
-96 (PAD)        - change B channel of background color
+74 (PAD)         - change R channel of background color
+85 (PAD)         - change G channel of background color
+96 (PAD)         - change B channel of background color
 
-Z + ← → ↑ ↓     - change light position
-Z + 74 (PAD)    - change R channel of light color
-Z + 85 (PAD)    - change G channel of light color
-Z + 96 (PAD)    - change B channel of light color
+Z + ← → ↑ ↓      - change light position
+Z + 74 (PAD)     - change R channel of light color
+Z + 85 (PAD)     - change G channel of light color
+Z + 96 (PAD)     - change B channel of light color
 ```
 
 \* only if .obj uses .mlt file

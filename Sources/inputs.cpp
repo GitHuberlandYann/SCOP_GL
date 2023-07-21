@@ -1,5 +1,54 @@
 #include "scop.h"
 
+Camera camera(glm::vec3(0.0f, 2.0f, 0.0f));
+float lastX = WIN_WIDTH / 2.0f;
+float lastY = WIN_HEIGHT / 2.0f;
+bool first_mouse = true;
+
+void cursor_position_callback( GLFWwindow* window, double xpos, double ypos )
+{
+	(void)window;
+
+	float x_pos = static_cast<float>(xpos);
+    float y_pos = static_cast<float>(ypos);
+
+    if (first_mouse)
+    {
+        lastX = x_pos;
+        lastY = y_pos;
+        first_mouse = false;
+    }
+
+    float x_offset = x_pos - lastX;
+    float y_offset = lastY - y_pos; // reversed since y-coordinates go from bottom to top
+	// std::cout << "x " << x_pos << "\t\ty " << y_pos << "\t\tx_offset: " << x_offset << "\t\ty_offset: " << y_offset << std::endl;
+
+    lastX = x_pos;
+    lastY = y_pos;
+
+    camera.processMouseMovement(x_offset / 10, y_offset / 10);
+}
+
+void scroll_callback( GLFWwindow* window, double xoffset, double yoffset )
+{
+	(void)window;
+	(void)xoffset;
+
+    camera.processMouseScroll(static_cast<float>(yoffset));
+}
+
+void OpenGL_Manager::update_cam_view( void )
+{
+	glm::mat4 view = camera.getViewMatrix();
+	glUniformMatrix4fv(_uniView, 1, GL_FALSE, glm::value_ptr(view));
+}
+
+void OpenGL_Manager::update_cam_perspective( void )
+{
+	glm::mat4 proj = camera.getPerspectiveMatrix();
+	glUniformMatrix4fv(_uniProj, 1, GL_FALSE, glm::value_ptr(proj));
+}
+
 void OpenGL_Manager::user_inputs( void )
 {
 	if (glfwGetKey(_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -124,12 +173,10 @@ void OpenGL_Manager::user_inputs( void )
 	GLint key_cam_v = (glfwGetKey(_window, GLFW_KEY_UP) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_DOWN) == GLFW_PRESS);
 	if (key_cam_v) {
 		if (!key_light) {
-			_cam_angles.y += key_cam_v;
-			if (_cam_angles.y < -180.0f)
-				_cam_angles.y = 179.0f;
-			else if (_cam_angles.y > 180.0f)
-				_cam_angles.y = -179.0f;
-			// std::cout << "current angle y cam: " << _cam_angles.y << std::endl;
+			if (key_cam_v == 1)
+				camera.processKeyboard(FORWARD);
+			else
+				camera.processKeyboard(BACKWARD);
 		} else {
 			_light_angles.y = glm::clamp(_light_angles.y + key_cam_v * (_rotation_speed - 0.5f), -90.0f, 90.0f);
 		}
@@ -137,11 +184,10 @@ void OpenGL_Manager::user_inputs( void )
 	GLint key_cam_h = (glfwGetKey(_window, GLFW_KEY_LEFT) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_RIGHT) == GLFW_PRESS);
 	if (key_cam_h) {
 		if (!key_light) {
-			_cam_angles.x += key_cam_h * (_rotation_speed - 0.5f);
-			if (_cam_angles.x < 0.0f)
-				_cam_angles.x = 359.0f;
-			else if (_cam_angles.x > 360.0f)
-				_cam_angles.x = 1.0f;
+			if (key_cam_h == 1)
+				camera.processKeyboard(LEFT);
+			else
+				camera.processKeyboard(RIGHT);
 		} else {
 			_light_angles.x += key_cam_h * (_rotation_speed - 0.5f);
 			if (_light_angles.x < 0.0f)
@@ -151,38 +197,24 @@ void OpenGL_Manager::user_inputs( void )
 		}
 	}
 	GLint key_cam_z = (glfwGetKey(_window, GLFW_KEY_KP_1) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_0) == GLFW_PRESS);
-	if (key_cam_z) {
-		_cam_pos.z += key_cam_z * 0.05f * (_rotation_speed - 0.5f);
-	}
-	GLint key_cam_move = (glfwGetKey(_window, GLFW_KEY_KP_3) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_2) == GLFW_PRESS);
-	if (key_cam_move) {
-		glm::vec3 cam_director = glm::vec3(glm::cos(glm::radians(_cam_angles.x)),
-											glm::sin(glm::radians(_cam_angles.x)),
-											glm::sin(glm::radians(_cam_angles.y)));
-		if (key_cam_move == 1)
-			_cam_pos += 0.01f * (_rotation_speed - 0.5f) * cam_director;
-		else
-			_cam_pos -= 0.01f * (_rotation_speed - 0.5f) * cam_director;
-	}
+	if (key_cam_z == 1)
+		camera.processKeyboard(UP);
+	else if (key_cam_z == -1)
+		camera.processKeyboard(DOWN);
 
-	if ((!key_light && (key_cam_v || key_cam_h)) || key_cam_z || key_cam_move)
+	if ((!key_light && (key_cam_v || key_cam_h)) || key_cam_z || camera._mouse_update)
 	{
-		glm::vec3 cam_director = glm::vec3(glm::cos(glm::radians(_cam_angles.x)),
-											glm::sin(glm::radians(_cam_angles.x)),
-											glm::sin(glm::radians(_cam_angles.y)));
-		glm::mat4 view = glm::lookAt(_cam_pos, _cam_pos + cam_director, glm::vec3(0.0f, 0.0f, 1.0f));
-		glUniformMatrix4fv(_uniView, 1, GL_FALSE, glm::value_ptr(view));
+		update_cam_view();
+		camera._mouse_update = false;
+	}
+	if (camera._scroll_update) {
+		update_cam_perspective();
+		camera._scroll_update = false;
 	}
 	if (key_light && (key_cam_v || key_cam_h)) {
-		_light_pos = 2.0f * glm::vec3(glm::cos(glm::radians(_light_angles.x)),
-								glm::sin(glm::radians(_light_angles.x)),
+		_light_pos = 2.0f * glm::vec3(glm::cos(glm::radians(_light_angles.x)) + glm::cos(glm::radians(_light_angles.y)),
+								glm::sin(glm::radians(_light_angles.x)) + glm::cos(glm::radians(_light_angles.y)),
 								glm::sin(glm::radians(_light_angles.y)));
 		glUniform3fv(_uniLightPos, 1, glm::value_ptr(_light_pos));
 	}
 }
-
-// void cursor_position_callback( GLFWwindow* window, double xpos, double ypos )
-// {
-// 	(void)window;
-// 	std::cout << "current mouse position: [" << xpos << ", " << ypos << ']' << std::endl;
-// }

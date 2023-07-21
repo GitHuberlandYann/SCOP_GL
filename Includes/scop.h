@@ -28,5 +28,6 @@ typedef struct {
 # include "Parser.hpp"
 # include "Face.hpp"
 # include "OpenGL_Manager.hpp"
+# include "Camera.hpp"
 
 #endif

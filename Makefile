@@ -2,7 +2,7 @@ NAME		= scop
 OBJS_DIR	= Objs
 SRCS_DIR	= Sources
 
-FILES		= main inputs utils Exception Face Material OpenGL_Manager Parser
+FILES		= main inputs utils Camera Exception Face Material OpenGL_Manager Parser
 
 SRCS		= $(addprefix $(SRCS_DIR)/, $(addsuffix .cpp, $(FILES)))
 OBJS 		= $(addprefix $(OBJS_DIR)/, $(addsuffix .o, $(FILES)))

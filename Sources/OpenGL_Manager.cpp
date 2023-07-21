@@ -7,14 +7,12 @@ OpenGL_Manager::OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, si
 		_use_light(0), _key_use_light(0), _mouse_x(0), _mouse_y(0), _vtp_size(vert_tex_pair.size())
 {
 	std::cout << "Constructor of OpenGL_Manager called" << std::endl << std::endl;
-	set_vertex(_rotation, 0.0f, 0.0f, 180.0f);
+	set_vertex(_rotation, -90.0f, 0.0f, 0.0f);
 	set_vertex(_background_color, 0.5f, 0.5f, 0.5f);
-	_cam_pos = glm::vec3(2.5f, 2.5f, 2.0f);
 	_light_col = glm::vec3(1.0f, 1.0f, 1.0f);
-	_cam_angles = glm::vec2(225.0f, -37.0f);
-	_light_angles = glm::vec2(20.0f, 60.0f);
-	_light_pos = 2.0f * glm::vec3(glm::cos(glm::radians(_light_angles.x)),
-								glm::sin(glm::radians(_light_angles.x)),
+	_light_angles = glm::vec2(20.0f, 40.0f);
+	_light_pos = 2.0f * glm::vec3(glm::cos(glm::radians(_light_angles.x)) + glm::cos(glm::radians(_light_angles.y)),
+								glm::sin(glm::radians(_light_angles.x)) + glm::cos(glm::radians(_light_angles.y)),
 								glm::sin(glm::radians(_light_angles.y)));
 
 	for (size_t index = 0; index < _vtp_size; index++) {
@@ -249,36 +247,21 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	glUniform1i(_uniUseLight, 0);
 
 	_uniModel = glGetUniformLocation(_shaderProgram, "model");
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::rotate(model, glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(_rotation.x), glm::vec3(-1.0f, 0.0f, 0.0f));
 	glUniformMatrix4fv(_uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
-	// std::cout << "looking at " << _cam_pos.x + glm::cos(glm::radians(_cam_angles.x)) << ", " << _cam_pos.y + glm::sin(glm::radians(_cam_angles.x)) << ", " << _cam_pos.z + glm::sin(glm::radians(_cam_angles.y)) << std::endl;
-	glm::vec3 cam_director = glm::vec3(glm::cos(glm::radians(_cam_angles.x)),
-										glm::sin(glm::radians(_cam_angles.x)),
-										glm::sin(glm::radians(_cam_angles.y)));
-	glm::mat4 view = glm::lookAt( // simulates a moving camera
-		_cam_pos, // world position of camera
-		_cam_pos + cam_director, // point to be centered on screen
-		glm::vec3(0.0f, 0.0f, 1.0f) // 'up' axis, here up is z axis, meaning x y is the ground
-	);
 	_uniView = glGetUniformLocation(_shaderProgram, "view");
-	glUniformMatrix4fv(_uniView, 1, GL_FALSE, glm::value_ptr(view));
+	update_cam_view();
 
-	glm::mat4 proj = glm::perspective( // perspective projection matrix
-		glm::radians(45.0f),                          // vertical fov
-		(GLfloat)WIN_WIDTH / (GLfloat)WIN_HEIGHT,     // aspect ratio of the screen
-		0.1f,                                         // 'near' plane == clipping planes (default was 1.0f)
-		10.0f                                         // 'far' plane
-	);
-	GLint uniProj = glGetUniformLocation(_shaderProgram, "proj");
-	glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
+	_uniProj = glGetUniformLocation(_shaderProgram, "proj");
+	update_cam_perspective();
 
 	_uniScale = glGetUniformLocation(_shaderProgram, "scale");
 	glm::mat4 scale =  glm::scale(glm::mat4(1.0f), glm::vec3(_zoom));
 	glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
 
-	// glm::vec3 light_pos = glm::vec3(10.0f, 1.0f, 3.0f);
 	_uniLightPos = glGetUniformLocation(_shaderProgram, "lightPos");
 	glUniform3fv(_uniLightPos, 1, glm::value_ptr(_light_pos));
 
@@ -333,10 +316,9 @@ void OpenGL_Manager::main_loop( void )
 	std::cout << "number of vertices: " << _number_vertices << std::endl << std::endl;
 	
 	glClearColor(_background_color.x, _background_color.y, _background_color.z, 1.0f);
-	// glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	// if (glfwRawMouseMotionSupported())
-	// 	glfwSetInputMode(_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 	// glfwSetCursorPosCallback(_window, cursor_position_callback);
+    glfwSetScrollCallback(_window, scroll_callback);
+    glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// std::cout << "60fps game is 16.6666 ms/frame; 30fps game is 33.3333 ms/frame." << std::endl; 
 	// double lastTime = glfwGetTime();
