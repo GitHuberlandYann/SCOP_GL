@@ -5,25 +5,36 @@ Project done during my formation at [19](https://campus19.be/).
 
 ## Controls (Qwerty)
 ```
-WSADER      - rotate object around
-+- (PAD)    - change movement speed
-+-          - resize object
+WSADER          - rotate object around
++- (PAD)        - change movement speed
++-              - resize object
 
-C           - switch color mode (DEFAULT-MATERIAL*-TEXTURE*-PROVIDED-GRAY-GRADIENT)
-I           - invert colors
-L			- enable/disable lightning
-F           - switch drawing mode (FILL-LINES-POINTS)
-[]          - change point size in POINTS drawing mode
+C               - switch color mode (DEFAULT-MATERIAL*-TEXTURE*-PROVIDED**-GRAY-GRADIENT)
+I               - invert colors
+L			    - enable/disable lightning***
+F               - switch drawing mode (FILL-LINES-POINTS)
+[]              - change point size in POINTS drawing mode
 
-B           - enable/disable GL_DEPTH_TEST
-NM          - next/previous section of object is displayed
+B               - enable/disable GL_DEPTH_TEST
+NM              - next/previous section of object is displayed
 
-74 (PAD)    - change R channel of background color
-85 (PAD)    - change G channel of background color
-96 (PAD)    - change B channel of background color
+← → ↑ ↓         - rotate camera
+01 (PAD)        - change z coordinate of camera
+23 (PAD)        - translate camera
+
+74 (PAD)        - change R channel of background color
+85 (PAD)        - change G channel of background color
+96 (PAD)        - change B channel of background color
+
+Z + ← → ↑ ↓     - change light position
+Z + 74 (PAD)    - change R channel of light color
+Z + 85 (PAD)    - change G channel of light color
+Z + 96 (PAD)    - change B channel of light color
 ```
 
-\* color mode possible only if .obj uses .mlt file
+\* only if .obj uses .mlt file
+\*\* only if image provided as third argument
+\*\*\* only if .obj has vn
 
 ## Run
 After cloning the project, cd into repo and run:
@@ -31,7 +42,8 @@ After cloning the project, cd into repo and run:
 ```
 /SCOP $> make
 /SCOP $> ./scop					# to run default file
-/SCOP $> ./scop Ressources/<file_you_want>.obj
+/SCOP $> ./scop Resources/<file_you_want>.obj
+/SCOP $> ./scop Resources/<file_you_want>.obj Resources/<image_you_want>.png
 ```
 
 ## Libraries

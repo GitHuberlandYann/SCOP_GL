@@ -10,7 +10,12 @@ OpenGL_Manager::OpenGL_Manager( GLint nb_textures, std::vector<std::pair<int, si
 	set_vertex(_rotation, 0.0f, 0.0f, 180.0f);
 	set_vertex(_background_color, 0.5f, 0.5f, 0.5f);
 	_cam_pos = glm::vec3(2.5f, 2.5f, 2.0f);
+	_light_col = glm::vec3(1.0f, 1.0f, 1.0f);
 	_cam_angles = glm::vec2(225.0f, -37.0f);
+	_light_angles = glm::vec2(20.0f, 60.0f);
+	_light_pos = 2.0f * glm::vec3(glm::cos(glm::radians(_light_angles.x)),
+								glm::sin(glm::radians(_light_angles.x)),
+								glm::sin(glm::radians(_light_angles.y)));
 
 	for (size_t index = 0; index < _vtp_size; index++) {
 		size_t tex_index = *vert_tex_pair[index].second;
@@ -248,7 +253,7 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	model = glm::rotate(model, glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 	glUniformMatrix4fv(_uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
-	std::cout << "looking at " << _cam_pos.x + glm::cos(glm::radians(_cam_angles.x)) << ", " << _cam_pos.y + glm::cos(glm::radians(_cam_angles.x)) << ", " << _cam_pos.z + glm::sin(glm::radians(_cam_angles.y)) << std::endl;
+	// std::cout << "looking at " << _cam_pos.x + glm::cos(glm::radians(_cam_angles.x)) << ", " << _cam_pos.y + glm::sin(glm::radians(_cam_angles.x)) << ", " << _cam_pos.z + glm::sin(glm::radians(_cam_angles.y)) << std::endl;
 	glm::vec3 cam_director = glm::vec3(glm::cos(glm::radians(_cam_angles.x)),
 										glm::sin(glm::radians(_cam_angles.x)),
 										glm::sin(glm::radians(_cam_angles.y)));
@@ -273,13 +278,12 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	glm::mat4 scale =  glm::scale(glm::mat4(1.0f), glm::vec3(_zoom));
 	glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
 
-	glm::vec3 light_pos = glm::vec3(10.0f, 1.0f, 3.0f);
-	GLint uniLightPos = glGetUniformLocation(_shaderProgram, "lightPos");
-	glUniform3fv(uniLightPos, 1, glm::value_ptr(light_pos));
+	// glm::vec3 light_pos = glm::vec3(10.0f, 1.0f, 3.0f);
+	_uniLightPos = glGetUniformLocation(_shaderProgram, "lightPos");
+	glUniform3fv(_uniLightPos, 1, glm::value_ptr(_light_pos));
 
-	glm::vec3 light_color = glm::vec3(1.0f, 1.0f, 1.0f);
-	GLint uniLightColor = glGetUniformLocation(_shaderProgram, "lightColor");
-	glUniform3fv(uniLightColor, 1, glm::value_ptr(light_color));
+	_uniLightColor = glGetUniformLocation(_shaderProgram, "lightColor");
+	glUniform3fv(_uniLightColor, 1, glm::value_ptr(_light_col));
 
 	check_glstate("Communication with shader program successfully established");
 }
@@ -375,6 +379,5 @@ void OpenGL_Manager::main_loop( void )
 		glfwPollEvents();
 	}
 
-	std::cout << std::endl;
 	check_glstate("main loop successfully exited");
 }

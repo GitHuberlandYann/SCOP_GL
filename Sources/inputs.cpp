@@ -75,14 +75,23 @@ void OpenGL_Manager::user_inputs( void )
 		glUniformMatrix4fv(_uniScale, 1, GL_FALSE, glm::value_ptr(scale));
 	}
 
+	GLint key_light = (glfwGetKey(_window, GLFW_KEY_Z) == GLFW_PRESS);
+
 	GLint key_col_r = (glfwGetKey(_window, GLFW_KEY_KP_7) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_4) == GLFW_PRESS);
 	GLint key_col_g = (glfwGetKey(_window, GLFW_KEY_KP_8) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_5) == GLFW_PRESS);
 	GLint key_col_b = (glfwGetKey(_window, GLFW_KEY_KP_9) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_6) == GLFW_PRESS);
 	if (key_col_r || key_col_g || key_col_b) {
-		_background_color.x = glm::clamp(_background_color.x + key_col_r * 0.01f, 0.f, 1.f);
-		_background_color.y = glm::clamp(_background_color.y + key_col_g * 0.01f, 0.f, 1.f);
-		_background_color.z = glm::clamp(_background_color.z + key_col_b * 0.01f, 0.f, 1.f);
-		glClearColor(_background_color.x, _background_color.y, _background_color.z, 1.0f);
+		if (!key_light) {
+			_background_color.x = glm::clamp(_background_color.x + key_col_r * 0.01f, 0.f, 1.f);
+			_background_color.y = glm::clamp(_background_color.y + key_col_g * 0.01f, 0.f, 1.f);
+			_background_color.z = glm::clamp(_background_color.z + key_col_b * 0.01f, 0.f, 1.f);
+			glClearColor(_background_color.x, _background_color.y, _background_color.z, 1.0f);
+		} else {
+			_light_col.x = glm::clamp(_light_col.x + key_col_r * 0.01f, 0.f, 1.f);
+			_light_col.y = glm::clamp(_light_col.y + key_col_g * 0.01f, 0.f, 1.f);
+			_light_col.z = glm::clamp(_light_col.z + key_col_b * 0.01f, 0.f, 1.f);
+			glUniform3fv(_uniLightColor, 1, glm::value_ptr(_light_col));
+		}
 	}
 
 	GLint key_next_section = (glfwGetKey(_window, GLFW_KEY_N) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_M) == GLFW_PRESS);
@@ -111,23 +120,35 @@ void OpenGL_Manager::user_inputs( void )
 	} else if (glfwGetKey(_window, GLFW_KEY_L) == GLFW_RELEASE)
 		_key_use_light = 0;
 	
-	/* camera work */
+	/* camera and light work */
 	GLint key_cam_v = (glfwGetKey(_window, GLFW_KEY_UP) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_DOWN) == GLFW_PRESS);
 	if (key_cam_v) {
-		_cam_angles.y += key_cam_v;
-		if (_cam_angles.y < -180.0f)
-			_cam_angles.y = 179.0f;
-		else if (_cam_angles.y > 180.0f)
-			_cam_angles.y = -179.0f;
-		// std::cout << "current angle y cam: " << _cam_angles.y << std::endl;
+		if (!key_light) {
+			_cam_angles.y += key_cam_v;
+			if (_cam_angles.y < -180.0f)
+				_cam_angles.y = 179.0f;
+			else if (_cam_angles.y > 180.0f)
+				_cam_angles.y = -179.0f;
+			// std::cout << "current angle y cam: " << _cam_angles.y << std::endl;
+		} else {
+			_light_angles.y = glm::clamp(_light_angles.y + key_cam_v * (_rotation_speed - 0.5f), -90.0f, 90.0f);
+		}
 	}
 	GLint key_cam_h = (glfwGetKey(_window, GLFW_KEY_LEFT) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_RIGHT) == GLFW_PRESS);
 	if (key_cam_h) {
-		_cam_angles.x += key_cam_h * (_rotation_speed - 0.5f);
-		if (_cam_angles.x < 0.0f)
-			_cam_angles.x = 359.0f;
-		else if (_cam_angles.x > 360.0f)
-			_cam_angles.x = 1.0f;
+		if (!key_light) {
+			_cam_angles.x += key_cam_h * (_rotation_speed - 0.5f);
+			if (_cam_angles.x < 0.0f)
+				_cam_angles.x = 359.0f;
+			else if (_cam_angles.x > 360.0f)
+				_cam_angles.x = 1.0f;
+		} else {
+			_light_angles.x += key_cam_h * (_rotation_speed - 0.5f);
+			if (_light_angles.x < 0.0f)
+				_light_angles.x = 359.0f;
+			else if (_light_angles.x > 360.0f)
+				_light_angles.x = 1.0f;
+		}
 	}
 	GLint key_cam_z = (glfwGetKey(_window, GLFW_KEY_KP_1) == GLFW_PRESS) - (glfwGetKey(_window, GLFW_KEY_KP_0) == GLFW_PRESS);
 	if (key_cam_z) {
@@ -144,13 +165,19 @@ void OpenGL_Manager::user_inputs( void )
 			_cam_pos -= 0.01f * (_rotation_speed - 0.5f) * cam_director;
 	}
 
-	if (key_cam_v || key_cam_h || key_cam_z || key_cam_move)
+	if ((!key_light && (key_cam_v || key_cam_h)) || key_cam_z || key_cam_move)
 	{
 		glm::vec3 cam_director = glm::vec3(glm::cos(glm::radians(_cam_angles.x)),
 											glm::sin(glm::radians(_cam_angles.x)),
 											glm::sin(glm::radians(_cam_angles.y)));
 		glm::mat4 view = glm::lookAt(_cam_pos, _cam_pos + cam_director, glm::vec3(0.0f, 0.0f, 1.0f));
 		glUniformMatrix4fv(_uniView, 1, GL_FALSE, glm::value_ptr(view));
+	}
+	if (key_light && (key_cam_v || key_cam_h)) {
+		_light_pos = 2.0f * glm::vec3(glm::cos(glm::radians(_light_angles.x)),
+								glm::sin(glm::radians(_light_angles.x)),
+								glm::sin(glm::radians(_light_angles.y)));
+		glUniform3fv(_uniLightPos, 1, glm::value_ptr(_light_pos));
 	}
 }
 

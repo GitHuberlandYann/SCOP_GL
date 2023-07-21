@@ -447,7 +447,7 @@ void Parser::display_content( void )
 {
 	const std::string modes[] = {"UNSET", "ONLY_V", "ONLY_VT", "ONLY_VN", "VTN"};
 
-	std::cout << std::endl << " ---- content ----" << std::endl << std::endl;
+	std::cout << " ---- content ----" << std::endl << std::endl;
 	std::cout << "\t-Face Mode: " << modes[_face_mode] << std::endl;
 	std::cout << "\t-Number of vertices: " << _vertices.size() << std::endl;
 	std::cout << "\t-Number of vertices_textures: " << _vertices_textures.size() << std::endl;
