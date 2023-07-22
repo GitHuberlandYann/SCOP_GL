@@ -2,6 +2,7 @@
 
 in vec3 Color;
 in vec2 Texcoord;
+// in vec3 CamPos;
 in vec3 LightPos;
 in vec3 LightColor;
 in vec3 FragPos;
@@ -34,6 +35,13 @@ void main()
 		float diff = max(dot(norm, lightDir), 0.0);
 		vec3 diffuse = diff * LightColor;
 
+		// float specularStrength = 0.5;
+		// vec3 camDir = normalize(CamPos - FragPos);
+		// vec3 reflectDir = reflect(-lightDir, norm);
+		// float spec = pow(max(dot(camDir, reflectDir), 0.0), 32);
+		// vec3 specular = specularStrength * spec * LightColor;  
+
+		// vec3 tmpColor = (ambient + diffuse + specular) * vec3(outColor);
 		vec3 tmpColor = (ambient + diffuse) * vec3(outColor);
 		outColor = vec4(tmpColor, 1.0);
 	}

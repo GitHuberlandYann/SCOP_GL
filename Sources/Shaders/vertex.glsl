@@ -17,11 +17,13 @@ uniform mat4 view;
 uniform mat4 proj;
 uniform mat4 scale;
 
+// uniform vec3 camPos;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 
 out vec3 Color;
 out vec2 Texcoord;
+// out vec3 CamPos;
 out vec3 LightPos;
 out vec3 LightColor;
 out vec3 FragPos;
@@ -52,6 +54,7 @@ vec3 gray()
 void main()
 {
 	Texcoord = texcoord;
+	// CamPos = camPos;
 	LightPos = lightPos;
 	LightColor = lightColor;
 	FragPos = vec3(model * vec4(position, 1.0));

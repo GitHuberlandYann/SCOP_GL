@@ -24,7 +24,6 @@ void scroll_callback( GLFWwindow* window, double xoffset, double yoffset );
 class Camera
 {
 	private:
-		glm::vec3 _position;
 		glm::vec3 _front;
 		glm::vec3 _up;
 		glm::vec3 _right;
@@ -37,6 +36,7 @@ class Camera
     	void updateCameraVectors( void );
 	
 	public:
+		glm::vec3 _position;
 		bool _mouse_update, _scroll_update;
 
 		Camera( glm::vec3 position );

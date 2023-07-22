@@ -57,6 +57,8 @@ int main( int ac, char **av )
 	} catch (std::exception & e) {
 		std::cerr << e.what() << std::endl;
 		delete parser;
+		if (provided_tex)
+			SOIL_free_image_data(provided_tex->texture);
 		delete provided_tex;
 		std::cout << std::endl << " ---- Goodbye ----" << std::endl;
 		return (1);
@@ -75,6 +77,8 @@ int main( int ac, char **av )
 	render->main_loop();
 
 	delete render;
+	if (provided_tex)
+		SOIL_free_image_data(provided_tex->texture);
 	delete provided_tex;
 
 	std::cout << std::endl << " ---- Goodbye ----" << std::endl;

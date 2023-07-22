@@ -42,7 +42,7 @@ class OpenGL_Manager
 		GLFWwindow* _window;
 		GLuint _vao, _vbo; // vertex array objects, vertex buffer objects
 		GLuint _shaderProgram, _vertexShader, _fragmentShader;
-		GLint _uniColorMode, _uniTexIndex, _uniInvert, _uniUseLight, _uniModel, _uniView, _uniProj, _uniScale, _uniLightPos, _uniLightColor;
+		GLint _uniColorMode, _uniTexIndex, _uniInvert, _uniUseLight, _uniModel, _uniView, _uniProj, _uniScale, _uniLightPos, _uniLightColor;// , _uniCamPos
 		GLint _nb_textures, _number_vertices, _section;
 		bool _omore_tex, _can_light;
 		GLuint *_textures;

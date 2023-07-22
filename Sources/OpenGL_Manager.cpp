@@ -117,6 +117,7 @@ std::string OpenGL_Manager::create_fragment_shader( std::string data )
 		return (res);
 	}
 	savefile << res;
+	savefile.close();
 	return (res);
 }
 
@@ -159,7 +160,7 @@ void OpenGL_Manager::setup_array_buffer( Parser *parser )
 
 	_number_vertices = parser->get_number_vertices();
 
-	GLfloat *vertices = new GLfloat[_number_vertices * 12]; // X Y Z, R G B, U V, nX nY nZ
+	GLfloat *vertices = new GLfloat[_number_vertices * 12]; // num, X Y Z, R G B, U V, nX nY nZ
 	std::cout << "total alloc of vertices: " << _number_vertices * 12 << std::endl;
 	parser->fill_vertex_array(vertices);
 
@@ -252,6 +253,7 @@ void OpenGL_Manager::setup_communication_shaders( void )
 	model = glm::rotate(model, glm::radians(_rotation.x), glm::vec3(-1.0f, 0.0f, 0.0f));
 	glUniformMatrix4fv(_uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
+	// _uniCamPos = glGetUniformLocation(_shaderProgram, "camPos");
 	_uniView = glGetUniformLocation(_shaderProgram, "view");
 	update_cam_view();
 

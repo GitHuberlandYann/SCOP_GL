@@ -41,6 +41,8 @@ void OpenGL_Manager::update_cam_view( void )
 {
 	glm::mat4 view = camera.getViewMatrix();
 	glUniformMatrix4fv(_uniView, 1, GL_FALSE, glm::value_ptr(view));
+
+	// glUniform3fv(_uniCamPos, 1, glm::value_ptr(camera._position));
 }
 
 void OpenGL_Manager::update_cam_perspective( void )
